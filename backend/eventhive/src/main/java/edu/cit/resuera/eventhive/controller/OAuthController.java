@@ -1,5 +1,6 @@
 package edu.cit.resuera.eventhive.controller;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.cit.resuera.eventhive.entity.User;
 import edu.cit.resuera.eventhive.repository.UserRepository;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 public class OAuthController {
@@ -20,7 +22,9 @@ public class OAuthController {
     }
 
     @GetMapping("/login-success")
-    public String loginSuccess(@AuthenticationPrincipal OAuth2User oauthUser) {
+    public void loginSuccess(
+            @AuthenticationPrincipal OAuth2User oauthUser,
+            HttpServletResponse response) throws IOException {
 
         String email = oauthUser.getAttribute("email");
         String name = oauthUser.getAttribute("name");
@@ -30,27 +34,23 @@ public class OAuthController {
 
         if (name != null) {
             String[] parts = name.split(" ");
-
             firstname = parts[0];
-
             if (parts.length > 1) {
                 lastname = parts[parts.length - 1];
             }
         }
 
         if (!userRepository.existsByEmail(email)) {
-
             User user = new User();
             user.setEmail(email);
             user.setFirstname(firstname);
             user.setLastname(lastname);
             user.setPasswordHash("GOOGLE_AUTH");
             user.setCreatedAt(LocalDateTime.now());
-
             userRepository.save(user);
         }
 
-        return "Google Login Successful: " + email;
+        response.sendRedirect("http://localhost:5173/dashboard");
     }
 }
  

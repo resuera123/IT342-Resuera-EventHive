@@ -1,10 +1,14 @@
 package edu.cit.resuera.eventhive.controller;
 
+import java.security.Principal;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import edu.cit.resuera.eventhive.dto.AuthResponse;
 import edu.cit.resuera.eventhive.dto.LoginRequest;
 import edu.cit.resuera.eventhive.dto.RegisterRequest;
 import edu.cit.resuera.eventhive.service.AuthService;
@@ -20,12 +24,20 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequest request) {
+    public AuthResponse register(@RequestBody RegisterRequest request) {
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequest request) {
+    public AuthResponse login(@RequestBody LoginRequest request) {
         return authService.login(request);
+    }
+
+    @GetMapping("/me")
+    public AuthResponse getCurrentUser(Principal principal) {
+        if (principal == null) {
+            return new AuthResponse("Not authenticated", null, null, null, null);
+        }
+        return authService.getCurrentUser(principal.getName());
     }
 }
