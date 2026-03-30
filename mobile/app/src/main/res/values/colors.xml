@@ -7,4 +7,14 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="charcoal">#1A1A1A</color>
+    <color name="dark_gunmetal">#212529</color>
+    <color name="outer_space">#343A40</color>
+    <color name="mine_shaft">#444444</color>
+    <color name="abbey_gray">#495057</color>
+    <color name="dove_gray">#666666</color>
+    <color name="silver_chalice">#888888</color>
+    <color name="mercury">#E0E0E0</color>
+    <color name="wild_sand">#F0F0F0</color>
+    <color name="alabaster">#F8F9FA</color>
 </resources>
