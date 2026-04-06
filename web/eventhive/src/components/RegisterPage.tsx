@@ -55,12 +55,12 @@ export default function RegisterPage() {
         }),
       })
 
-      const data = await res.text()
+      const data = await res.json()
 
-      if (data === 'User registered successfully') {
+      if (data.status === 'User registered successfully') {
         navigate('/login')
       } else {
-        setError(data || 'Registration failed. Please try again.')
+        setError(data.status || 'Registration failed. Please try again.')
       }
     } catch (_err) {
       setError('Unable to connect to server. Please try again.')

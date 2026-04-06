@@ -1,63 +1,115 @@
-import { useState, type ChangeEvent, type FormEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUser } from '../utils/auth'
-import { clearUser } from '../utils/auth'
+import { getUser, saveUser, clearUser } from '../utils/auth'
+import Navbar from './Navbar.tsx'
 
 export default function SettingsPage() {
   const navigate = useNavigate()
   const user = getUser()
-  const [firstName, setFirstName] = useState(user?.firstname ?? 'Alex')
-  const [lastName, setLastName] = useState(user?.lastname ?? 'Johnson')
-  const [email, setEmail] = useState(user?.email ?? 'alex.johnson@example.com')
+
   const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security'>('profile')
 
-  const handleSave = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    // TODO: save settings to backend or local storage
+  // ── Profile state ──
+  const [firstName, setFirstName] = useState(user?.firstname ?? '')
+  const [lastName, setLastName] = useState(user?.lastname ?? '')
+  const [email, setEmail] = useState(user?.email ?? '')
+  const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [profileLoading, setProfileLoading] = useState(false)
+
+  // ── Security state ──
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [securityMsg, setSecurityMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [securityLoading, setSecurityLoading] = useState(false)
+
+  // ── Notification state ──
+  const stored = JSON.parse(localStorage.getItem('eventhive_notif_prefs') ?? '{}')
+  const [notifRegistration, setNotifRegistration] = useState(stored.registration ?? true)
+  const [notifEventUpdates, setNotifEventUpdates] = useState(stored.eventUpdates ?? true)
+  const [notifCancellation, setNotifCancellation] = useState(stored.cancellation ?? true)
+  const [notifNewParticipant, setNotifNewParticipant] = useState(stored.newParticipant ?? true)
+  const [notifMsg, setNotifMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setProfileMsg(null)
+    setProfileLoading(true)
+
+    try {
+      const res = await fetch('http://localhost:8081/api/users/profile', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstname: firstName, lastname: lastName, email }),
+      })
+      const data = await res.json()
+
+      if (res.ok) {
+        saveUser({ id: data.id, firstname: data.firstname, lastname: data.lastname, email: data.email, role: data.role, createdAt: data.createdAt })
+        setProfileMsg({ type: 'success', text: 'Profile updated successfully.' })
+      } else {
+        setProfileMsg({ type: 'error', text: data.message || 'Failed to update profile.' })
+      }
+    } catch {
+      setProfileMsg({ type: 'error', text: 'Unable to connect to server.' })
+    } finally {
+      setProfileLoading(false)
+    }
   }
 
-  const handleLogout = () => {
-      clearUser()
-      navigate('/login')
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSecurityMsg(null)
+
+    if (newPassword !== confirmPassword) {
+      setSecurityMsg({ type: 'error', text: 'New passwords do not match.' })
+      return
     }
+    if (newPassword.length < 8) {
+      setSecurityMsg({ type: 'error', text: 'Password must be at least 8 characters.' })
+      return
+    }
+
+    setSecurityLoading(true)
+    try {
+      const res = await fetch('http://localhost:8081/api/users/password', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      })
+      const data = await res.json()
+
+      if (res.ok) {
+        setSecurityMsg({ type: 'success', text: 'Password changed successfully.' })
+        setCurrentPassword(''); setNewPassword(''); setConfirmPassword('')
+      } else {
+        setSecurityMsg({ type: 'error', text: data.message || 'Failed to change password.' })
+      }
+    } catch {
+      setSecurityMsg({ type: 'error', text: 'Unable to connect to server.' })
+    } finally {
+      setSecurityLoading(false)
+    }
+  }
+
+  const handleSaveNotifications = () => {
+    localStorage.setItem('eventhive_notif_prefs', JSON.stringify({
+      registration: notifRegistration,
+      eventUpdates: notifEventUpdates,
+      cancellation: notifCancellation,
+      newParticipant: notifNewParticipant,
+    }))
+    setNotifMsg({ type: 'success', text: 'Notification preferences saved.' })
+    setTimeout(() => setNotifMsg(null), 3000)
+  }
 
   return (
     <div className="min-vh-100 bg-light">
-      <nav className="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm px-4">
-        <div className="container-fluid px-0">
-          <a className="navbar-brand d-flex align-items-center gap-2 fw-bold" href="#">
-            <span
-              className="d-inline-flex align-items-center justify-content-center bg-dark text-white fw-bold rounded"
-              style={{ width: '32px', height: '32px', fontSize: '11px' }}
-            >
-              EH
-            </span>
-            EventHive
-          </a>
-
-          <div className="d-flex align-items-center gap-2 ms-auto">
-            <button className="btn btn-sm btn-link text-dark text-decoration-none" onClick={() => navigate('/dashboard')}>
-              Events
-            </button>
-            <button className="btn btn-sm btn-light d-flex align-items-center justify-content-center p-2" title="Profile" onClick={() => navigate('/profile')}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="8" r="4"/>
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
-              </svg>
-            </button>
-            <button className="btn btn-sm btn-light d-flex align-items-center justify-content-center p-2" title="Logout" onClick={handleLogout}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                <polyline points="16 17 21 12 16 7"/>
-                <line x1="21" y1="12" x2="9" y2="12"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar user={user} />
 
       <div className="container py-5" style={{ maxWidth: '900px' }}>
-
         <div className="card shadow-sm rounded-4 border-0">
           <div className="card-body p-4">
             <div className="mb-4">
@@ -65,13 +117,14 @@ export default function SettingsPage() {
               <p className="text-muted mb-0">Manage your account preferences</p>
             </div>
 
+            {/* Tabs */}
             <div className="d-flex gap-2 mb-4 rounded-4 border bg-white p-2">
-              {['profile', 'notifications', 'security'].map((tab) => (
+              {(['profile', 'notifications', 'security'] as const).map(tab => (
                 <button
                   key={tab}
                   type="button"
                   className={`btn btn-sm rounded-pill flex-fill border-0 ${activeTab === tab ? 'btn-dark text-white' : 'btn-light text-muted'}`}
-                  onClick={() => setActiveTab(tab as 'profile' | 'notifications' | 'security')}
+                  onClick={() => setActiveTab(tab)}
                 >
                   {tab === 'profile' && 'Profile'}
                   {tab === 'notifications' && 'Notifications'}
@@ -80,54 +133,148 @@ export default function SettingsPage() {
               ))}
             </div>
 
-            <form onSubmit={handleSave} className="bg-white rounded-4 border p-4">
-              <h5 className="fw-semibold mb-3">Profile Information</h5>
-              <p className="text-muted small mb-4">Update your personal information</p>
+            {/* ═══ Profile ═══ */}
+            {activeTab === 'profile' && (
+              <form onSubmit={handleSaveProfile} className="bg-white rounded-4 border p-4">
+                <h5 className="fw-semibold mb-1">Profile Information</h5>
+                <p className="text-muted small mb-4">Update your personal information</p>
 
-              <div className="row g-3 mb-3">
-                <div className="col-12 col-md-6">
-                  <label htmlFor="firstName" className="form-label small fw-semibold">
-                    Firstname
-                  </label>
-                  <input
-                    id="firstName"
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={firstName}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)}
-                  />
+                <div className="row g-3 mb-3">
+                  <div className="col-12 col-md-6">
+                    <label htmlFor="firstName" className="form-label small fw-semibold">First Name</label>
+                    <input id="firstName" type="text" className="form-control form-control-sm" value={firstName} onChange={(e: ChangeEvent<HTMLInputElement>) => setFirstName(e.target.value)} required />
+                  </div>
+                  <div className="col-12 col-md-6">
+                    <label htmlFor="lastName" className="form-label small fw-semibold">Last Name</label>
+                    <input id="lastName" type="text" className="form-control form-control-sm" value={lastName} onChange={(e: ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)} required />
+                  </div>
                 </div>
-                <div className="col-12 col-md-6">
-                  <label htmlFor="lastName" className="form-label small fw-semibold">
-                    Lastname
-                  </label>
-                  <input
-                    id="lastName"
-                    type="text"
-                    className="form-control form-control-sm"
-                    value={lastName}
-                    onChange={(e: ChangeEvent<HTMLInputElement>) => setLastName(e.target.value)}
-                  />
+
+                <div className="mb-4">
+                  <label htmlFor="emailAddress" className="form-label small fw-semibold">Email Address</label>
+                  <input id="emailAddress" type="email" className="form-control form-control-sm" value={email} onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)} required />
+                </div>
+
+                {profileMsg && (
+                  <div className={`alert py-2 small ${profileMsg.type === 'success' ? 'alert-success' : 'alert-danger'}`}>{profileMsg.text}</div>
+                )}
+
+                <button type="submit" className="btn btn-dark btn-sm" disabled={profileLoading}>
+                  {profileLoading ? <><span className="spinner-border spinner-border-sm me-2" />Saving...</> : 'Save Changes'}
+                </button>
+              </form>
+            )}
+
+            {/* ═══ Notifications ═══ */}
+            {activeTab === 'notifications' && (
+              <div className="bg-white rounded-4 border p-4">
+                <h5 className="fw-semibold mb-1">In-App Notifications</h5>
+                <p className="text-muted small mb-4">Choose which notifications appear in your bell icon</p>
+
+                <div className="d-flex flex-column gap-3">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div className="fw-medium small">Registration Confirmations</div>
+                      <div className="text-muted" style={{ fontSize: 12 }}>Get notified when you successfully register for an event</div>
+                    </div>
+                    <div className="form-check form-switch mb-0">
+                      <input className="form-check-input" type="checkbox" role="switch" checked={notifRegistration} onChange={() => setNotifRegistration(!notifRegistration)} />
+                    </div>
+                  </div>
+
+                  <hr className="my-0" />
+
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div className="fw-medium small">Event Updates</div>
+                      <div className="text-muted" style={{ fontSize: 12 }}>Get notified when an event you joined is resumed or updated</div>
+                    </div>
+                    <div className="form-check form-switch mb-0">
+                      <input className="form-check-input" type="checkbox" role="switch" checked={notifEventUpdates} onChange={() => setNotifEventUpdates(!notifEventUpdates)} />
+                    </div>
+                  </div>
+
+                  <hr className="my-0" />
+
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div className="fw-medium small">Cancellation Alerts</div>
+                      <div className="text-muted" style={{ fontSize: 12 }}>Get notified when an event you joined is cancelled</div>
+                    </div>
+                    <div className="form-check form-switch mb-0">
+                      <input className="form-check-input" type="checkbox" role="switch" checked={notifCancellation} onChange={() => setNotifCancellation(!notifCancellation)} />
+                    </div>
+                  </div>
+
+                  <hr className="my-0" />
+
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div className="fw-medium small">New Participants</div>
+                      <div className="text-muted" style={{ fontSize: 12 }}>Get notified when someone registers for your event (organizers)</div>
+                    </div>
+                    <div className="form-check form-switch mb-0">
+                      <input className="form-check-input" type="checkbox" role="switch" checked={notifNewParticipant} onChange={() => setNotifNewParticipant(!notifNewParticipant)} />
+                    </div>
+                  </div>
+                </div>
+
+                {notifMsg && (
+                  <div className={`alert py-2 small mt-3 ${notifMsg.type === 'success' ? 'alert-success' : 'alert-danger'}`}>{notifMsg.text}</div>
+                )}
+
+                <button className="btn btn-dark btn-sm mt-4" onClick={handleSaveNotifications}>
+                  Save Preferences
+                </button>
+              </div>
+            )}
+
+            {/* ═══ Security ═══ */}
+            {activeTab === 'security' && (
+              <div className="d-flex flex-column gap-4">
+                <form onSubmit={handleChangePassword} className="bg-white rounded-4 border p-4">
+                  <h5 className="fw-semibold mb-1">Change Password</h5>
+                  <p className="text-muted small mb-4">Update your password to keep your account secure</p>
+
+                  <div className="mb-3">
+                    <label className="form-label small fw-semibold">Current Password</label>
+                    <input type="password" className="form-control form-control-sm" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label small fw-semibold">New Password</label>
+                    <input type="password" className="form-control form-control-sm" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+                    <div className="form-text" style={{ fontSize: 11 }}>Must be at least 8 characters</div>
+                  </div>
+                  <div className="mb-4">
+                    <label className="form-label small fw-semibold">Confirm New Password</label>
+                    <input type="password" className="form-control form-control-sm" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+                  </div>
+
+                  {securityMsg && (
+                    <div className={`alert py-2 small ${securityMsg.type === 'success' ? 'alert-success' : 'alert-danger'}`}>{securityMsg.text}</div>
+                  )}
+
+                  <button type="submit" className="btn btn-dark btn-sm" disabled={securityLoading}>
+                    {securityLoading ? <><span className="spinner-border spinner-border-sm me-2" />Updating...</> : 'Update Password'}
+                  </button>
+                </form>
+
+                <div className="bg-white rounded-4 border border-danger p-4">
+                  <h5 className="fw-semibold text-danger mb-1">Danger Zone</h5>
+                  <p className="text-muted small mb-3">Irreversible actions on your account</p>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div className="fw-medium small">Delete Account</div>
+                      <div className="text-muted" style={{ fontSize: 12 }}>Permanently delete your account and all associated data</div>
+                    </div>
+                    <button className="btn btn-outline-danger btn-sm" onClick={() => alert('Account deletion is not yet available.')}>
+                      Delete Account
+                    </button>
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="mb-4">
-                <label htmlFor="emailAddress" className="form-label small fw-semibold">
-                  Email Address
-                </label>
-                <input
-                  id="emailAddress"
-                  type="email"
-                  className="form-control form-control-sm"
-                  value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <button type="submit" className="btn btn-dark btn-sm">
-                Save Changes
-              </button>
-            </form>
           </div>
         </div>
       </div>

@@ -14,6 +14,8 @@ interface AuthResponse {
   firstname: string
   lastname: string
   email: string
+  role: string
+  createdAt: string
 }
 
 export default function LoginPage() {
@@ -35,6 +37,7 @@ export default function LoginPage() {
     try {
       const res = await fetch('http://localhost:8081/api/auth/login', {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.email, password: form.password }),
       })
@@ -42,7 +45,7 @@ export default function LoginPage() {
       const data: AuthResponse = await res.json()
 
       if (data.status === 'Login successful') {
-        saveUser({ id: data.id, firstname: data.firstname, lastname: data.lastname, email: data.email })
+        saveUser({ id: data.id, firstname: data.firstname, lastname: data.lastname, email: data.email, role: data.role, createdAt: data.createdAt })
         navigate('/dashboard')
       } else {
         setError(data.status || 'Invalid credentials')

@@ -3,6 +3,8 @@ export interface UserAuth {
   firstname: string
   lastname: string
   email: string
+  role: string
+  createdAt: string
 }
 
 const STORAGE_KEY = 'eventhive_user'
