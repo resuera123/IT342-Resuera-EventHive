@@ -1,5 +1,7 @@
 package edu.cit.resuera.eventhive.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,4 +15,6 @@ public class AuthResponse {
     private String firstname;
     private String lastname;
     private String email;
+    private String role;
+    private LocalDateTime createdAt;
 }

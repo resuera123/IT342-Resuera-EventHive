@@ -24,7 +24,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            return new AuthResponse("Email already registered", null, null, null, null);
+            return new AuthResponse("Email already registered", null, null, null, null, null, null);
         }
 
         User user = new User();
@@ -35,21 +35,21 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        return new AuthResponse("User registered successfully", null, null, null, null);
+        return new AuthResponse("User registered successfully", null, null, null, null, null, null);
     }
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
         if (user == null) {
-            return new AuthResponse("Invalid credentials", null, null, null, null);
+            return new AuthResponse("Invalid credentials", null, null, null, null, null, null);
         }
 
         if (passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            return new AuthResponse("Login successful", user.getId(), user.getFirstname(), user.getLastname(), user.getEmail());
+            return new AuthResponse("Login successful", user.getId(), user.getFirstname(), user.getLastname(), user.getEmail(), user.getRole(), user.getCreatedAt());
         }
 
-        return new AuthResponse("Invalid credentials", null, null, null, null);
+        return new AuthResponse("Invalid credentials", null, null, null, null, null, null);
     }
 
     public AuthResponse getCurrentUser(String email) {
@@ -59,8 +59,10 @@ public class AuthService {
                 user.getId(), 
                 user.getFirstname(), 
                 user.getLastname(), 
-                user.getEmail()
+                user.getEmail(),
+                user.getRole(),
+                user.getCreatedAt()
             ))
-            .orElse(new AuthResponse("User not found", null, null, null, null));
+            .orElse(new AuthResponse("User not found", null, null, null, null, null, null));
     }
 }

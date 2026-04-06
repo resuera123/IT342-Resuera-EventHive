@@ -46,6 +46,7 @@ public class OAuthController {
             user.setFirstname(firstname);
             user.setLastname(lastname);
             user.setPasswordHash("GOOGLE_AUTH");
+            user.setRole("participant");
             user.setCreatedAt(LocalDateTime.now());
             userRepository.save(user);
         }
