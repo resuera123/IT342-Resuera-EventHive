@@ -25,22 +25,25 @@ import edu.cit.resuera.eventhive.dto.EventRequest;
 import edu.cit.resuera.eventhive.dto.EventResponse;
 import edu.cit.resuera.eventhive.entity.EventStatus;
 import edu.cit.resuera.eventhive.service.EventService;
+import edu.cit.resuera.eventhive.adapter.AuthenticationAdapter;
 
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
 
     private final EventService eventService;
+    private final AuthenticationAdapter authAdapter;
 
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService, AuthenticationAdapter authAdapter) {
         this.eventService = eventService;
+        this.authAdapter = authAdapter;
     }
 
     @GetMapping
     public List<EventResponse> getAllEvents(
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        String email = resolveEmailOrNull(oauthUser, principal);
+        String email = authAdapter.getEmailOrNull(oauthUser, principal);
         if (email != null) {
             return eventService.getAllEventsForUser(email);
         }
@@ -56,7 +59,7 @@ public class EventController {
     public List<EventResponse> getMyEvents(
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         return eventService.getEventsByOrganizer(email);
     }
 
@@ -65,7 +68,7 @@ public class EventController {
             @RequestBody EventRequest request,
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         return eventService.createEvent(request, email);
     }
 
@@ -91,7 +94,7 @@ public class EventController {
         request.setCategory(category);
         request.setMaxParticipants(maxParticipants);
 
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         return eventService.createEvent(request, email, image);
     }
 
@@ -110,7 +113,7 @@ public class EventController {
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
         try {
-            String email = resolveEmail(oauthUser, principal);
+            String email = authAdapter.getEmail(oauthUser, principal);
 
             EventRequest request = new EventRequest();
             request.setTitle(title);
@@ -150,7 +153,7 @@ public class EventController {
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
         try {
-            String email = resolveEmail(oauthUser, principal);
+            String email = authAdapter.getEmail(oauthUser, principal);;
             EventResponse response = eventService.registerForEvent(id, email);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -162,19 +165,8 @@ public class EventController {
     public List<EventResponse> getRegisteredEvents(
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         return eventService.getRegisteredEvents(email);
     }
 
-    private String resolveEmail(OAuth2User oauthUser, Principal principal) {
-        if (oauthUser != null) return oauthUser.getAttribute("email");
-        if (principal != null) return principal.getName();
-        throw new RuntimeException("Not authenticated");
-    }
-
-    private String resolveEmailOrNull(OAuth2User oauthUser, Principal principal) {
-        if (oauthUser != null) return oauthUser.getAttribute("email");
-        if (principal != null) return principal.getName();
-        return null;
-    }
 }

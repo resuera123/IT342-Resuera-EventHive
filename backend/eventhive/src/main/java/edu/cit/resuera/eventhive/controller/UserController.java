@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.cit.resuera.eventhive.entity.User;
 import edu.cit.resuera.eventhive.repository.UserRepository;
+import edu.cit.resuera.eventhive.adapter.AuthenticationAdapter;
 
 @RestController
 @RequestMapping("/api/users")
@@ -21,9 +22,11 @@ public class UserController {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final AuthenticationAdapter authAdapter;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, AuthenticationAdapter authAdapter) {
         this.userRepository = userRepository;
+        this.authAdapter = authAdapter;
     }
 
     // Update profile (firstname, lastname, email)
@@ -33,7 +36,7 @@ public class UserController {
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
 
-        String currentEmail = resolveEmail(oauthUser, principal);
+        String currentEmail = authAdapter.getEmail(oauthUser, principal);
         User user = userRepository.findByEmail(currentEmail)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -74,7 +77,7 @@ public class UserController {
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
 
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -99,9 +102,4 @@ public class UserController {
         return ResponseEntity.ok(Map.of("message", "Password changed successfully"));
     }
 
-    private String resolveEmail(OAuth2User oauthUser, Principal principal) {
-        if (oauthUser != null) return oauthUser.getAttribute("email");
-        if (principal != null) return principal.getName();
-        throw new RuntimeException("Not authenticated");
-    }
 }

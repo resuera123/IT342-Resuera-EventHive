@@ -1,7 +1,6 @@
 package edu.cit.resuera.eventhive.controller;
 
 import java.security.Principal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -17,15 +16,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.cit.resuera.eventhive.entity.Notification;
 import edu.cit.resuera.eventhive.service.NotificationService;
+import edu.cit.resuera.eventhive.adapter.AuthenticationAdapter;
 
 @RestController
 @RequestMapping("/api/notifications")
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final AuthenticationAdapter authAdapter;
 
-    public NotificationController(NotificationService notificationService) {
+    public NotificationController(NotificationService notificationService,
+                                AuthenticationAdapter authAdapter) {
         this.notificationService = notificationService;
+        this.authAdapter = authAdapter;
     }
 
     // Get all notifications for current user
@@ -33,7 +36,7 @@ public class NotificationController {
     public List<Map<String, Object>> getNotifications(
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         return notificationService.getUserNotifications(email)
                 .stream()
                 .map(this::toMap)
@@ -45,7 +48,7 @@ public class NotificationController {
     public Map<String, Integer> getUnreadCount(
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         return Map.of("count", notificationService.getUnreadCount(email));
     }
 
@@ -55,7 +58,7 @@ public class NotificationController {
             @PathVariable Long id,
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         notificationService.markAsRead(id, email);
         return ResponseEntity.ok(Map.of("message", "Marked as read"));
     }
@@ -65,7 +68,7 @@ public class NotificationController {
     public ResponseEntity<?> markAllAsRead(
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        String email = resolveEmail(oauthUser, principal);
+        String email = authAdapter.getEmail(oauthUser, principal);
         notificationService.markAllAsRead(email);
         return ResponseEntity.ok(Map.of("message", "All marked as read"));
     }
@@ -82,9 +85,4 @@ public class NotificationController {
         );
     }
 
-    private String resolveEmail(OAuth2User oauthUser, Principal principal) {
-        if (oauthUser != null) return oauthUser.getAttribute("email");
-        if (principal != null) return principal.getName();
-        throw new RuntimeException("Not authenticated");
-    }
 }
