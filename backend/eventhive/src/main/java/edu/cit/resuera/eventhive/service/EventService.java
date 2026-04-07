@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,184 +15,143 @@ import edu.cit.resuera.eventhive.entity.Event;
 import edu.cit.resuera.eventhive.entity.EventRegistration;
 import edu.cit.resuera.eventhive.entity.EventStatus;
 import edu.cit.resuera.eventhive.entity.User;
+import edu.cit.resuera.eventhive.event.EventStatusChangedEvent;
 import edu.cit.resuera.eventhive.repository.EventRegistrationRepository;
 import edu.cit.resuera.eventhive.repository.EventRepository;
 import edu.cit.resuera.eventhive.repository.UserRepository;
+import edu.cit.resuera.eventhive.validator.RegistrationValidator;
 
+/**
+ * Refactored EventService applying:
+ *  - Facade Pattern: implements IEventService interface, hides subsystem complexity
+ *  - Builder Pattern: uses EventResponse.builder() instead of 15-param constructor
+ *  - Observer Pattern: publishes EventStatusChangedEvent instead of calling NotificationService directly
+ *  - Strategy Pattern: delegates registration validation to injected RegistrationValidator list
+ */
 @Service
-public class EventService {
+public class EventService implements IEventService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final EventRegistrationRepository registrationRepository;
     private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;          // Observer
+    private final List<RegistrationValidator> registrationValidators; // Strategy
 
     public EventService(EventRepository eventRepository,
                         UserRepository userRepository,
                         EventRegistrationRepository registrationRepository,
-                        NotificationService notificationService) {
+                        NotificationService notificationService,
+                        ApplicationEventPublisher eventPublisher,
+                        List<RegistrationValidator> registrationValidators) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.registrationRepository = registrationRepository;
         this.notificationService = notificationService;
+        this.eventPublisher = eventPublisher;
+        this.registrationValidators = registrationValidators;
     }
 
+    @Override
     public EventResponse createEvent(EventRequest request, String organizerEmail) {
-        User organizer = userRepository.findByEmail(organizerEmail)
-            .orElseThrow(() -> new RuntimeException("Organizer not found"));
+        User organizer = findUserByEmail(organizerEmail);
 
         Event event = new Event();
-        event.setTitle(request.getTitle());
-        event.setDescription(request.getDescription());
-        event.setStartDate(request.getStartDate());
-        event.setEndDate(request.getEndDate());
-        event.setLocation(request.getLocation());
-        event.setCategory(request.getCategory());
-        event.setMaxParticipants(request.getMaxParticipants());
+        applyRequest(event, request);
         event.setStatus(EventStatus.UPCOMING);
         event.setOrganizer(organizer);
         event.setCreatedAt(LocalDateTime.now());
 
-        Event saved = eventRepository.save(event);
-        return toResponse(saved, null);
+        return toResponse(eventRepository.save(event), null);
     }
 
-    public List<EventResponse> getAllEvents() {
-        return eventRepository.findAll()
-            .stream()
-            .map(e -> toResponse(e, null))
-            .collect(Collectors.toList());
+    @Override
+    public EventResponse createEvent(EventRequest request, String organizerEmail, MultipartFile image) throws IOException {
+        User organizer = findUserByEmail(organizerEmail);
+
+        Event event = new Event();
+        applyRequest(event, request);
+        event.setImageUrl(saveImage(image));
+        event.setStatus(EventStatus.UPCOMING);
+        event.setOrganizer(organizer);
+        event.setCreatedAt(LocalDateTime.now());
+
+        return toResponse(eventRepository.save(event), null);
     }
 
-    public List<EventResponse> getAllEventsForUser(String email) {
-        User user = userRepository.findByEmail(email).orElse(null);
-        return eventRepository.findAll()
-            .stream()
-            .map(e -> toResponse(e, user))
-            .collect(Collectors.toList());
-    }
-
-    public List<EventResponse> getEventsByOrganizer(String organizerEmail) {
-        User organizer = userRepository.findByEmail(organizerEmail)
-            .orElseThrow(() -> new RuntimeException("Organizer not found"));
-        return eventRepository.findByOrganizer(organizer)
-            .stream()
-            .map(e -> toResponse(e, null))
-            .collect(Collectors.toList());
-    }
-
-    public List<EventResponse> getEventsByCategory(String category) {
-        return eventRepository.findByCategory(category)
-            .stream()
-            .map(e -> toResponse(e, null))
-            .collect(Collectors.toList());
-    }
-
-    public EventResponse updateEventStatus(Long eventId, EventStatus status) {
-        Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new RuntimeException("Event not found"));
-
-        EventStatus oldStatus = event.getStatus();
-        event.setStatus(status);
-        Event saved = eventRepository.save(event);
-
-        // Send notifications
-        if (status == EventStatus.CANCELLED && oldStatus != EventStatus.CANCELLED) {
-            notificationService.notifyEventCancelled(saved);
-        } else if (status == EventStatus.UPCOMING && oldStatus == EventStatus.CANCELLED) {
-            notificationService.notifyEventResumed(saved);
-        }
-
-        return toResponse(saved, null);
-    }
-
+    @Override
     public EventResponse updateEvent(Long eventId, EventRequest request, String organizerEmail, MultipartFile image) throws IOException {
-        Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new RuntimeException("Event not found"));
+        Event event = findEventById(eventId);
 
-        // Verify ownership
         if (!event.getOrganizer().getEmail().equals(organizerEmail)) {
             throw new RuntimeException("Only the organizer can edit this event");
         }
 
-        event.setTitle(request.getTitle());
-        event.setDescription(request.getDescription());
-        event.setStartDate(request.getStartDate());
-        event.setEndDate(request.getEndDate());
-        event.setLocation(request.getLocation());
-        event.setCategory(request.getCategory());
-        event.setMaxParticipants(request.getMaxParticipants());
-
+        applyRequest(event, request);
         if (image != null && !image.isEmpty()) {
-            String uploadDir = "uploads/events/";
-            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
-            if (!java.nio.file.Files.exists(uploadPath)) {
-                java.nio.file.Files.createDirectories(uploadPath);
-            }
-            String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-            java.nio.file.Files.copy(image.getInputStream(), uploadPath.resolve(filename));
-            event.setImageUrl("/" + uploadDir + filename);
+            event.setImageUrl(saveImage(image));
         }
 
         return toResponse(eventRepository.save(event), null);
     }
 
+    // ── Observer Pattern: publish event instead of calling notification service directly ──
+    @Override
+    public EventResponse updateEventStatus(Long eventId, EventStatus status) {
+        Event event = findEventById(eventId);
+        EventStatus oldStatus = event.getStatus();
+        event.setStatus(status);
+        Event saved = eventRepository.save(event);
+
+        // Publish event — listeners handle notifications (Observer Pattern)
+        eventPublisher.publishEvent(new EventStatusChangedEvent(this, saved, oldStatus, status));
+
+        return toResponse(saved, null);
+    }
+
+    @Override
     public void deleteEvent(Long eventId) {
         eventRepository.deleteById(eventId);
     }
 
-    public EventResponse createEvent(EventRequest request, String organizerEmail, MultipartFile image) throws IOException {
-        User organizer = userRepository.findByEmail(organizerEmail)
-            .orElseThrow(() -> new RuntimeException("Organizer not found"));
-
-        String imageUrl = null;
-        if (image != null && !image.isEmpty()) {
-            String uploadDir = "uploads/events/";
-            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
-            if (!java.nio.file.Files.exists(uploadPath)) {
-                java.nio.file.Files.createDirectories(uploadPath);
-            }
-            String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-            java.nio.file.Files.copy(image.getInputStream(), uploadPath.resolve(filename));
-            imageUrl = "/" + uploadDir + filename;
-        }
-
-        Event event = new Event();
-        event.setTitle(request.getTitle());
-        event.setDescription(request.getDescription());
-        event.setStartDate(request.getStartDate());
-        event.setEndDate(request.getEndDate());
-        event.setLocation(request.getLocation());
-        event.setCategory(request.getCategory());
-        event.setImageUrl(imageUrl);
-        event.setMaxParticipants(request.getMaxParticipants());
-        event.setStatus(EventStatus.UPCOMING);
-        event.setOrganizer(organizer);
-        event.setCreatedAt(LocalDateTime.now());
-
-        return toResponse(eventRepository.save(event), null);
+    @Override
+    public List<EventResponse> getAllEvents() {
+        return eventRepository.findAll().stream()
+                .map(e -> toResponse(e, null))
+                .collect(Collectors.toList());
     }
 
-    // ── Registration ──
+    @Override
+    public List<EventResponse> getAllEventsForUser(String email) {
+        User user = userRepository.findByEmail(email).orElse(null);
+        return eventRepository.findAll().stream()
+                .map(e -> toResponse(e, user))
+                .collect(Collectors.toList());
+    }
 
+    @Override
+    public List<EventResponse> getEventsByOrganizer(String organizerEmail) {
+        User organizer = findUserByEmail(organizerEmail);
+        return eventRepository.findByOrganizer(organizer).stream()
+                .map(e -> toResponse(e, null))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventResponse> getEventsByCategory(String category) {
+        return eventRepository.findByCategory(category).stream()
+                .map(e -> toResponse(e, null))
+                .collect(Collectors.toList());
+    }
+
+    // ── Strategy Pattern: delegates validation to injected validator list ──
+    @Override
     public EventResponse registerForEvent(Long eventId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new RuntimeException("Event not found"));
+        User user = findUserByEmail(userEmail);
+        Event event = findEventById(eventId);
 
-        if (event.getOrganizer().getId().equals(user.getId())) {
-            throw new RuntimeException("Organizers cannot register for their own events");
-        }
-
-        if (registrationRepository.existsByUserAndEvent(user, event)) {
-            throw new RuntimeException("Already registered for this event");
-        }
-
-        int current = registrationRepository.countByEvent(event);
-        if (event.getMaxParticipants() != null && current >= event.getMaxParticipants()) {
-            throw new RuntimeException("Event is full");
-        }
+        // Strategy Pattern — each validator checks one rule
+        registrationValidators.forEach(v -> v.validate(user, event));
 
         EventRegistration registration = new EventRegistration();
         registration.setUser(user);
@@ -199,46 +159,76 @@ public class EventService {
         registration.setRegisteredAt(LocalDateTime.now());
         registrationRepository.save(registration);
 
-        // Send notifications
         notificationService.notifyRegistration(user, event);
 
         return toResponse(event, user);
     }
 
+    @Override
     public List<EventResponse> getRegisteredEvents(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-            .orElseThrow(() -> new RuntimeException("User not found"));
-        return registrationRepository.findByUser(user)
-            .stream()
-            .map(reg -> toResponse(reg.getEvent(), user))
-            .collect(Collectors.toList());
+        User user = findUserByEmail(userEmail);
+        return registrationRepository.findByUser(user).stream()
+                .map(reg -> toResponse(reg.getEvent(), user))
+                .collect(Collectors.toList());
     }
 
-    // ── Mapping ──
-
+    // ── Builder Pattern: constructs EventResponse with named setters ──
     private EventResponse toResponse(Event event, User currentUser) {
         int count = registrationRepository.countByEvent(event);
-        Boolean isRegistered = null;
-        if (currentUser != null) {
-            isRegistered = registrationRepository.existsByUserAndEvent(currentUser, event);
-        }
+        Boolean isRegistered = currentUser != null
+                ? registrationRepository.existsByUserAndEvent(currentUser, event)
+                : null;
 
-        return new EventResponse(
-            event.getId(),
-            event.getTitle(),
-            event.getDescription(),
-            event.getStartDate(),
-            event.getEndDate(),
-            event.getLocation(),
-            event.getCategory(),
-            event.getImageUrl(),
-            event.getMaxParticipants(),
-            event.getStatus(),
-            event.getOrganizer().getId(),
-            event.getOrganizer().getFirstname() + " " + event.getOrganizer().getLastname(),
-            event.getCreatedAt(),
-            count,
-            isRegistered
-        );
+        return EventResponse.builder()
+                .id(event.getId())
+                .title(event.getTitle())
+                .description(event.getDescription())
+                .startDate(event.getStartDate())
+                .endDate(event.getEndDate())
+                .location(event.getLocation())
+                .category(event.getCategory())
+                .imageUrl(event.getImageUrl())
+                .maxParticipants(event.getMaxParticipants())
+                .status(event.getStatus())
+                .organizerId(event.getOrganizer().getId())
+                .organizerName(event.getOrganizer().getFirstname() + " " + event.getOrganizer().getLastname())
+                .createdAt(event.getCreatedAt())
+                .participantCount(count)
+                .isRegistered(isRegistered)
+                .build();
+    }
+
+    // ── Private helpers ──
+
+    private User findUserByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    private Event findEventById(Long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Event not found"));
+    }
+
+    private void applyRequest(Event event, EventRequest request) {
+        event.setTitle(request.getTitle());
+        event.setDescription(request.getDescription());
+        event.setStartDate(request.getStartDate());
+        event.setEndDate(request.getEndDate());
+        event.setLocation(request.getLocation());
+        event.setCategory(request.getCategory());
+        event.setMaxParticipants(request.getMaxParticipants());
+    }
+
+    private String saveImage(MultipartFile image) throws IOException {
+        if (image == null || image.isEmpty()) return null;
+        String uploadDir = "uploads/events/";
+        java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+        if (!java.nio.file.Files.exists(uploadPath)) {
+            java.nio.file.Files.createDirectories(uploadPath);
+        }
+        String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
+        java.nio.file.Files.copy(image.getInputStream(), uploadPath.resolve(filename));
+        return "/" + uploadDir + filename;
     }
 }
