@@ -1,10 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.EditEventActivity">
+    android:background="#FFFFFF">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+            <ImageButton
+                android:id="@+id/btnBackFromEdit"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_arrow_back"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Edit Event"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Event Title" android:textSize="13sp" android:textStyle="bold" android:textColor="#374151"/>
+        <EditText android:id="@+id/etEditTitle" android:layout_width="match_parent" android:layout_height="44dp" android:textSize="13sp" android:paddingStart="12dp" android:background="@drawable/bg_edit_text" android:layout_marginBottom="12dp"/>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Description" android:textSize="13sp" android:textStyle="bold" android:textColor="#374151"/>
+        <EditText android:id="@+id/etEditDesc" android:layout_width="match_parent" android:layout_height="80dp" android:textSize="13sp" android:paddingStart="12dp" android:paddingTop="8dp" android:gravity="top" android:background="@drawable/bg_edit_text" android:layout_marginBottom="12dp"/>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="12dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginEnd="6dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Start Date &amp; Time" android:textSize="12sp" android:textStyle="bold" android:textColor="#374151"/>
+                <Button android:id="@+id/btnEditStartDate" android:layout_width="match_parent" android:layout_height="40dp" android:text="Select..." android:textAllCaps="false" android:textSize="12sp" android:backgroundTint="#F3F4F6" android:textColor="#374151"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="6dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="End Date &amp; Time" android:textSize="12sp" android:textStyle="bold" android:textColor="#374151"/>
+                <Button android:id="@+id/btnEditEndDate" android:layout_width="match_parent" android:layout_height="40dp" android:text="Select..." android:textAllCaps="false" android:textSize="12sp" android:backgroundTint="#F3F4F6" android:textColor="#374151"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Location" android:textSize="13sp" android:textStyle="bold" android:textColor="#374151"/>
+        <EditText android:id="@+id/etEditLocation" android:layout_width="match_parent" android:layout_height="44dp" android:textSize="13sp" android:paddingStart="12dp" android:background="@drawable/bg_edit_text" android:layout_marginBottom="12dp"/>
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="20dp">
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginEnd="6dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Category" android:textSize="12sp" android:textStyle="bold" android:textColor="#374151"/>
+                <Spinner android:id="@+id/spinnerEditCategory" android:layout_width="match_parent" android:layout_height="44dp" android:background="@drawable/bg_spinner_outline"/>
+            </LinearLayout>
+            <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:layout_marginStart="6dp">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Max Participants" android:textSize="12sp" android:textStyle="bold" android:textColor="#374151"/>
+                <EditText android:id="@+id/etEditMaxParticipants" android:layout_width="match_parent" android:layout_height="44dp" android:inputType="number" android:textSize="13sp" android:paddingStart="12dp" android:background="@drawable/bg_edit_text"/>
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button android:id="@+id/btnSaveEdit" android:layout_width="match_parent" android:layout_height="48dp" android:text="Save Changes" android:textAllCaps="false" android:backgroundTint="#198754" android:textColor="#FFFFFF" android:layout_marginBottom="8dp"/>
+        <Button android:id="@+id/btnCancelEdit" android:layout_width="match_parent" android:layout_height="44dp" android:text="Cancel" android:textAllCaps="false" android:backgroundTint="#F3F4F6" android:textColor="#374151"/>
+    </LinearLayout>
+</ScrollView>

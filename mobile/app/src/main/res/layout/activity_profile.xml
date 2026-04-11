@@ -1,103 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp"
-    android:background="@color/white">
-
-    <ImageButton
-        android:id="@+id/btnBackToDashboard"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:src="@android:drawable/ic_menu_revert"
-        android:tint="@color/black"/>
+    android:orientation="vertical"
+    android:background="#F8F9FA">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginTop="50dp">
-
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:background="#FFFFFF"
+        android:elevation="2dp">
+        <ImageButton
+            android:id="@+id/btnBackToDashboard"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_arrow_back"
+            android:background="?attr/selectableItemBackgroundBorderless"/>
         <TextView
             android:layout_width="wrap_content"
-            android:layout_height="35dp"
-            android:text="Profile Details"
-            android:textSize="25sp"
+            android:layout_height="wrap_content"
+            android:text="Profile"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="?attr/colorPrimary"
-            android:fontFamily="@font/poppins_bold"
-            android:layout_marginBottom="32dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Firstname: "
-                android:textSize="18sp"
-                android:fontFamily="@font/poppins_medium"
-                android:textColor="@color/dark_gunmetal"/>
-
-            <TextView
-                android:id="@+id/tvDisplayFirstName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textColor="#000"
-                android:fontFamily="@font/poppins_medium"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Lastname: "
-                android:textSize="18sp"
-                android:fontFamily="@font/poppins_medium"
-                android:textColor="@color/dark_gunmetal"/>
-
-            <TextView
-                android:id="@+id/tvDisplayLastName"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textColor="#000"
-                android:fontFamily="@font/poppins_medium"/>
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Email: "
-                android:textSize="18sp"
-                android:fontFamily="@font/poppins_medium"
-                android:textColor="@color/dark_gunmetal"/>
-
-            <TextView
-                android:id="@+id/tvDisplayEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textSize="18sp"
-                android:textColor="#777777"
-                android:fontFamily="@font/poppins_medium"/>
-
-        </LinearLayout>
-
+            android:textColor="#111827"
+            android:layout_marginStart="8dp"/>
     </LinearLayout>
-</RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Profile card -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="2dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="60dp"
+                        android:background="#1E293B"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal"
+                        android:paddingBottom="16dp"
+                        android:layout_marginTop="-30dp">
+
+                        <!-- Tappable avatar -->
+                        <FrameLayout
+                            android:id="@+id/avatarContainer"
+                            android:layout_width="64dp"
+                            android:layout_height="64dp">
+
+                            <ImageView
+                                android:id="@+id/ivProfilePic"
+                                android:layout_width="64dp"
+                                android:layout_height="64dp"
+                                android:scaleType="centerCrop"
+                                android:background="@drawable/bg_avatar"/>
+
+                            <TextView
+                                android:id="@+id/tvInitials"
+                                android:layout_width="64dp"
+                                android:layout_height="64dp"
+                                android:gravity="center"
+                                android:textSize="22sp"
+                                android:textStyle="bold"
+                                android:textColor="#FFFFFF"
+                                android:background="@drawable/bg_avatar"/>
+                        </FrameLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Tap to change photo"
+                            android:textSize="10sp"
+                            android:textColor="#9CA3AF"
+                            android:layout_marginTop="2dp"/>
+
+                        <TextView
+                            android:id="@+id/tvProfileName"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:textColor="#111827"
+                            android:layout_marginTop="4dp"/>
+
+                        <TextView
+                            android:id="@+id/tvProfileEmail"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="12sp"
+                            android:textColor="#6B7280"/>
+
+                        <TextView
+                            android:id="@+id/tvProfileRole"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="12sp"
+                            android:textColor="#6B7280"
+                            android:layout_marginTop="2dp"/>
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Tabs -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="12dp">
+                <Button android:id="@+id/btnTabOwn" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1"
+                    android:text="Own Events" android:textSize="11sp" android:textAllCaps="false" android:textColor="#FFFFFF"
+                    android:backgroundTint="#212529" android:insetTop="0dp" android:insetBottom="0dp"/>
+                <Button android:id="@+id/btnTabMy" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1"
+                    android:text="My Events" android:textSize="11sp" android:textAllCaps="false" android:textColor="#212529"
+                    android:backgroundTint="#FFFFFF" android:insetTop="0dp" android:insetBottom="0dp"/>
+                <Button android:id="@+id/btnTabPast" android:layout_width="0dp" android:layout_height="36dp" android:layout_weight="1"
+                    android:text="Past Events" android:textSize="11sp" android:textAllCaps="false" android:textColor="#212529"
+                    android:backgroundTint="#FFFFFF" android:insetTop="0dp" android:insetBottom="0dp"/>
+            </LinearLayout>
+
+            <TextView android:id="@+id/tvProfileEmpty" android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="No events to show." android:textColor="#6B7280" android:textAlignment="center"
+                android:layout_marginTop="40dp" android:visibility="gone"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvProfileEvents"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"/>
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
