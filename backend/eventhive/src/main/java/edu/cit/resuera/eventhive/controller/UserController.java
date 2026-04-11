@@ -7,10 +7,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import edu.cit.resuera.eventhive.entity.User;
 import edu.cit.resuera.eventhive.repository.UserRepository;
@@ -103,5 +107,46 @@ public class UserController {
         if (oauthUser != null) return oauthUser.getAttribute("email");
         if (principal != null) return principal.getName();
         throw new RuntimeException("Not authenticated");
+    }
+
+    @PostMapping(value = "/profile-pic", consumes = "multipart/form-data")
+    public ResponseEntity<?> uploadProfilePic(
+            @RequestParam("image") MultipartFile image,
+            @AuthenticationPrincipal OAuth2User oauthUser,
+            Principal principal) {
+ 
+        String email = resolveEmail(oauthUser, principal);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+ 
+        try {
+            String uploadDir = "uploads/profiles/";
+            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
+            if (!java.nio.file.Files.exists(uploadPath)) {
+                java.nio.file.Files.createDirectories(uploadPath);
+            }
+            String filename = user.getId() + "_" + System.currentTimeMillis() + "_" + image.getOriginalFilename();
+            java.nio.file.Files.copy(image.getInputStream(), uploadPath.resolve(filename),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            String url = "/" + uploadDir + filename;
+ 
+            user.setProfilePicUrl(url);
+            userRepository.save(user);
+ 
+            return ResponseEntity.ok(Map.of("profilePicUrl", url));
+        } catch (java.io.IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("message", "Upload failed"));
+        }
+    }
+ 
+    // Get profile pic URL
+    @GetMapping("/profile-pic")
+    public ResponseEntity<?> getProfilePic(
+            @AuthenticationPrincipal OAuth2User oauthUser,
+            Principal principal) {
+        String email = resolveEmail(oauthUser, principal);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(Map.of("profilePicUrl", user.getProfilePicUrl() != null ? user.getProfilePicUrl() : ""));
     }
 }

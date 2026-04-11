@@ -38,6 +38,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                     .requestMatchers("/api/events/registered", "/api/events/my-events").authenticated()
                     .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
+                    .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/google-mobile").permitAll()
                     .requestMatchers("/uploads/**").permitAll()
                     .anyRequest().authenticated()
             )

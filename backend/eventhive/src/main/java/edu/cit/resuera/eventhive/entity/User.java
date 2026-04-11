@@ -37,5 +37,7 @@ public class User {
     @Column(columnDefinition = "VARCHAR(255) DEFAULT 'participant'")
     private String role = "participant";
 
+    private String profilePicUrl;
+
     private LocalDateTime createdAt;
 }
