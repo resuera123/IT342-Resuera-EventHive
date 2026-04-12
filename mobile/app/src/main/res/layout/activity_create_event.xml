@@ -3,31 +3,66 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:padding="20dp">
+    android:background="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="20dp">
 
-        <TextView
+        <!-- Header -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Create Event"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            android:textColor="#111827"
-            android:layout_marginBottom="4dp"/>
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+            <ImageButton
+                android:id="@+id/btnBackFromCreate"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_arrow_back"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Create Event"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
 
-        <TextView
+        <!-- Image Picker -->
+        <LinearLayout
+            android:id="@+id/layoutImagePicker"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Fill in the details to create a new event"
-            android:textSize="13sp"
-            android:textColor="#6B7280"
-            android:layout_marginBottom="20dp"/>
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="@drawable/bg_image_picker"
+            android:padding="20dp"
+            android:layout_marginBottom="16dp">
 
+            <ImageView
+                android:id="@+id/ivEventImagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="140dp"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp"/>
+
+            <TextView
+                android:id="@+id/tvImageHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tap to add event image"
+                android:textColor="#6B7280"
+                android:textSize="13sp"/>
+        </LinearLayout>
+
+        <!-- Title -->
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="Event Title" android:textSize="13sp" android:textStyle="bold" android:textColor="#374151"/>
         <EditText
@@ -40,6 +75,7 @@
             android:background="@drawable/bg_edit_text"
             android:layout_marginBottom="12dp"/>
 
+        <!-- Description -->
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="Description" android:textSize="13sp" android:textStyle="bold" android:textColor="#374151"/>
         <EditText
@@ -54,6 +90,7 @@
             android:background="@drawable/bg_edit_text"
             android:layout_marginBottom="12dp"/>
 
+        <!-- Dates -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -75,6 +112,7 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Location -->
         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
             android:text="Location" android:textSize="13sp" android:textStyle="bold" android:textColor="#374151"/>
         <EditText
@@ -87,6 +125,7 @@
             android:background="@drawable/bg_edit_text"
             android:layout_marginBottom="12dp"/>
 
+        <!-- Category + Max -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

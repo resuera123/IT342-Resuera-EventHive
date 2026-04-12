@@ -1,6 +1,7 @@
 package com.resuera.eventhive.adapter
 
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -41,7 +42,6 @@ class EventAdapter(
 
         holder.tvTitle.text = event.title
 
-        // Date/Time
         try {
             val isoFmt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
             val displayDate = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
@@ -55,17 +55,24 @@ class EventAdapter(
         holder.tvLocation.text = event.location ?: ""
         holder.tvParticipants.text = "${event.participantCount ?: 0}/${event.maxParticipants ?: "∞"}"
 
-        // Status badge
+        // Status badge with proper colors
         holder.tvStatus.text = event.status ?: "UPCOMING"
-        when (event.status) {
-            "UPCOMING" -> holder.tvStatus.setBackgroundColor(Color.parseColor("#0d6efd"))
-            "ONGOING" -> holder.tvStatus.setBackgroundColor(Color.parseColor("#198754"))
-            else -> holder.tvStatus.setBackgroundColor(Color.parseColor("#6c757d"))
+        val statusColor = when (event.status) {
+            "UPCOMING" -> "#0d6efd"
+            "ONGOING" -> "#198754"
+            "CANCELLED" -> "#DC3545"
+            "COMPLETED" -> "#6c757d"
+            else -> "#6c757d"
         }
+        val statusBg = GradientDrawable().apply { setColor(Color.parseColor(statusColor)); cornerRadius = 8f }
+        holder.tvStatus.background = statusBg
+        holder.tvStatus.setTextColor(Color.WHITE)
 
         // Category badge
         holder.tvCategory.text = event.category ?: ""
-        holder.tvCategory.setBackgroundColor(getCategoryColor(event.category))
+        val catBg = GradientDrawable().apply { setColor(getCategoryColor(event.category)); cornerRadius = 8f }
+        holder.tvCategory.background = catBg
+        holder.tvCategory.setTextColor(Color.WHITE)
 
         // Image
         if (!event.imageUrl.isNullOrEmpty()) {

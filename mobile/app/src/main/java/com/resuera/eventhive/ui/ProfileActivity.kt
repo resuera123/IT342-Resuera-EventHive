@@ -2,8 +2,11 @@ package com.resuera.eventhive.ui
 
 import android.app.Activity
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -64,13 +67,11 @@ class ProfileActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tvProfileEmail).text = email
         findViewById<TextView>(R.id.tvProfileRole).text = role.replaceFirstChar { it.uppercase() }
 
-        // Load profile pic from backend URL
         loadProfilePic(profilePicUrl)
 
         findViewById<FrameLayout>(R.id.avatarContainer).setOnClickListener {
             pickImageLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-                type = "image/*"
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                type = "image/*"; addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             })
         }
 
@@ -114,7 +115,6 @@ class ProfileActivity : AppCompatActivity() {
             val inputStream = contentResolver.openInputStream(uri) ?: return
             val file = File(cacheDir, "profile_pic_upload.jpg")
             FileOutputStream(file).use { out -> inputStream.copyTo(out) }
-
             val requestBody = file.asRequestBody("image/*".toMediaType())
             val part = MultipartBody.Part.createFormData("image", file.name, requestBody)
 
@@ -139,13 +139,22 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun loadData() {
         RetrofitClient.instance.getRegisteredEvents().enqueue(object : Callback<List<EventResponse>> {
-            override fun onResponse(call: Call<List<EventResponse>>, r: Response<List<EventResponse>>) { registeredEvents = r.body() ?: emptyList(); showCurrentTab() }
+            override fun onResponse(call: Call<List<EventResponse>>, r: Response<List<EventResponse>>) {
+                registeredEvents = r.body() ?: emptyList(); showCurrentTab()
+            }
             override fun onFailure(call: Call<List<EventResponse>>, t: Throwable) {}
         })
         if (isOrganizer) {
             RetrofitClient.instance.getMyEvents().enqueue(object : Callback<List<EventResponse>> {
-                override fun onResponse(call: Call<List<EventResponse>>, r: Response<List<EventResponse>>) { ownEvents = r.body() ?: emptyList(); showCurrentTab() }
-                override fun onFailure(call: Call<List<EventResponse>>, t: Throwable) {}
+                override fun onResponse(call: Call<List<EventResponse>>, r: Response<List<EventResponse>>) {
+                    Log.d("ProfileActivity", "Own events loaded: ${r.code()}, count: ${r.body()?.size ?: 0}")
+                    ownEvents = r.body() ?: emptyList()
+                    ownEvents.forEach { Log.d("ProfileActivity", "Event: id=${it.id}, title=${it.title}") }
+                    showCurrentTab()
+                }
+                override fun onFailure(call: Call<List<EventResponse>>, t: Throwable) {
+                    Log.e("ProfileActivity", "Failed to load own events: ${t.message}")
+                }
             })
         }
     }
@@ -162,7 +171,38 @@ class ProfileActivity : AppCompatActivity() {
         rvEvents.visibility = if (list.isEmpty()) View.GONE else View.VISIBLE
     }
 
-    // ── Organizer Actions with styled dialogs ──
+    // ── Status badge color helper ──
+    private fun applyStatusColor(tvStatus: TextView, status: String?) {
+        val color = when (status) {
+            "UPCOMING" -> "#0d6efd"
+            "ONGOING" -> "#198754"
+            "CANCELLED" -> "#DC3545"
+            "COMPLETED" -> "#6c757d"
+            else -> "#6c757d"
+        }
+        val bg = GradientDrawable().apply {
+            setColor(Color.parseColor(color))
+            cornerRadius = 8f
+        }
+        tvStatus.background = bg
+        tvStatus.setTextColor(Color.WHITE)
+    }
+
+    private fun applyCategoryColor(tvCat: TextView, category: String?) {
+        val color = when (category) {
+            "Music" -> "#7c3aed"; "Sports" -> "#ea580c"; "Tech" -> "#0891b2"
+            "Arts" -> "#db2777"; "Food & Drink" -> "#d97706"; "Business" -> "#1e40af"
+            "Health" -> "#059669"; else -> "#6c757d"
+        }
+        val bg = GradientDrawable().apply {
+            setColor(Color.parseColor(color))
+            cornerRadius = 8f
+        }
+        tvCat.background = bg
+        tvCat.setTextColor(Color.WHITE)
+    }
+
+    // ── Organizer Actions ──
 
     private fun confirmCancel(e: EventResponse) {
         DialogHelper.showConfirm(this, DialogIcon.WARNING, "Cancel Event",
@@ -204,54 +244,87 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun openEditEvent(e: EventResponse) {
-        val intent = Intent(this, EditEventActivity::class.java)
-        intent.putExtra("EVENT_ID", e.id)
-        intent.putExtra("EVENT_TITLE", e.title)
-        intent.putExtra("EVENT_DESC", e.description)
-        intent.putExtra("EVENT_START", e.startDate)
-        intent.putExtra("EVENT_END", e.endDate)
-        intent.putExtra("EVENT_LOCATION", e.location)
-        intent.putExtra("EVENT_CATEGORY", e.category)
-        intent.putExtra("EVENT_MAX", e.maxParticipants ?: 0)
-        startActivity(intent)
+        startActivity(Intent(this, EditEventActivity::class.java).apply {
+            putExtra("EVENT_ID", e.id); putExtra("EVENT_TITLE", e.title)
+            putExtra("EVENT_DESC", e.description); putExtra("EVENT_START", e.startDate)
+            putExtra("EVENT_END", e.endDate); putExtra("EVENT_LOCATION", e.location)
+            putExtra("EVENT_CATEGORY", e.category); putExtra("EVENT_MAX", e.maxParticipants ?: 0)
+        })
     }
 
     // ── Adapters ──
 
     inner class OwnEventAdapter(private val events: List<EventResponse>) : RecyclerView.Adapter<OwnEventAdapter.VH>() {
         inner class VH(view: View) : RecyclerView.ViewHolder(view) {
-            val tvTitle: TextView = view.findViewById(R.id.tvOwnTitle); val tvDate: TextView = view.findViewById(R.id.tvOwnDate)
-            val tvStatus: TextView = view.findViewById(R.id.tvOwnStatus); val tvCategory: TextView = view.findViewById(R.id.tvOwnCategory)
+            val tvTitle: TextView = view.findViewById(R.id.tvOwnTitle)
+            val tvDate: TextView = view.findViewById(R.id.tvOwnDate)
+            val tvStatus: TextView = view.findViewById(R.id.tvOwnStatus)
+            val tvCategory: TextView = view.findViewById(R.id.tvOwnCategory)
             val tvParticipants: TextView = view.findViewById(R.id.tvOwnParticipants)
-            val btnEdit: Button = view.findViewById(R.id.btnOwnEdit); val btnCancel: Button = view.findViewById(R.id.btnOwnCancel)
-            val btnContinue: Button = view.findViewById(R.id.btnOwnContinue); val btnDelete: Button = view.findViewById(R.id.btnOwnDelete)
+            val btnEdit: Button = view.findViewById(R.id.btnOwnEdit)
+            val btnCancel: Button = view.findViewById(R.id.btnOwnCancel)
+            val btnContinue: Button = view.findViewById(R.id.btnOwnContinue)
+            val btnDelete: Button = view.findViewById(R.id.btnOwnDelete)
         }
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = VH(LayoutInflater.from(parent.context).inflate(R.layout.item_own_event, parent, false))
         override fun onBindViewHolder(holder: VH, position: Int) {
             val e = events[position]
-            holder.tvTitle.text = e.title; holder.tvStatus.text = e.status ?: "UPCOMING"; holder.tvCategory.text = e.category ?: ""
+            holder.tvTitle.text = e.title
             holder.tvParticipants.text = "${e.participantCount ?: 0}/${e.maxParticipants ?: "∞"} participants"
-            try { val f = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()); val d = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault()); holder.tvDate.text = d.format(f.parse(e.startDate ?: "")!!) } catch (_: Exception) { holder.tvDate.text = e.startDate ?: "" }
-            val canCancel = e.status == "UPCOMING" || e.status == "ONGOING"; val canContinue = e.status == "CANCELLED"; val canDelete = e.status == "CANCELLED" || e.status == "COMPLETED"
-            holder.btnEdit.visibility = if (canCancel) View.VISIBLE else View.GONE; holder.btnCancel.visibility = if (canCancel) View.VISIBLE else View.GONE
-            holder.btnContinue.visibility = if (canContinue) View.VISIBLE else View.GONE; holder.btnDelete.visibility = if (canDelete) View.VISIBLE else View.GONE
-            holder.btnEdit.setOnClickListener { openEditEvent(e) }; holder.btnCancel.setOnClickListener { confirmCancel(e) }
-            holder.btnContinue.setOnClickListener { confirmContinue(e) }; holder.btnDelete.setOnClickListener { confirmDelete(e) }
+            try {
+                val f = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                val d = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
+                holder.tvDate.text = d.format(f.parse(e.startDate ?: "")!!)
+            } catch (_: Exception) { holder.tvDate.text = e.startDate ?: "" }
+
+            // Status + category badge colors
+            holder.tvStatus.text = e.status ?: "UPCOMING"
+            applyStatusColor(holder.tvStatus, e.status)
+            holder.tvCategory.text = e.category ?: ""
+            applyCategoryColor(holder.tvCategory, e.category)
+
+            val canCancel = e.status == "UPCOMING" || e.status == "ONGOING"
+            val canContinue = e.status == "CANCELLED"
+            val canDelete = e.status == "CANCELLED" || e.status == "COMPLETED"
+            holder.btnEdit.visibility = if (canCancel) View.VISIBLE else View.GONE
+            holder.btnCancel.visibility = if (canCancel) View.VISIBLE else View.GONE
+            holder.btnContinue.visibility = if (canContinue) View.VISIBLE else View.GONE
+            holder.btnDelete.visibility = if (canDelete) View.VISIBLE else View.GONE
+
+            holder.btnEdit.setOnClickListener { openEditEvent(e) }
+            holder.btnCancel.setOnClickListener { confirmCancel(e) }
+            holder.btnContinue.setOnClickListener { confirmContinue(e) }
+            holder.btnDelete.setOnClickListener { confirmDelete(e) }
         }
         override fun getItemCount() = events.size
     }
 
     inner class SimpleEventAdapter(private val events: List<EventResponse>) : RecyclerView.Adapter<SimpleEventAdapter.VH>() {
         inner class VH(view: View) : RecyclerView.ViewHolder(view) {
-            val tvTitle: TextView = view.findViewById(R.id.tvOwnTitle); val tvDate: TextView = view.findViewById(R.id.tvOwnDate)
-            val tvStatus: TextView = view.findViewById(R.id.tvOwnStatus); val tvCategory: TextView = view.findViewById(R.id.tvOwnCategory)
+            val tvTitle: TextView = view.findViewById(R.id.tvOwnTitle)
+            val tvDate: TextView = view.findViewById(R.id.tvOwnDate)
+            val tvStatus: TextView = view.findViewById(R.id.tvOwnStatus)
+            val tvCategory: TextView = view.findViewById(R.id.tvOwnCategory)
             val tvParticipants: TextView = view.findViewById(R.id.tvOwnParticipants)
         }
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH { val v = LayoutInflater.from(parent.context).inflate(R.layout.item_own_event, parent, false); v.findViewById<LinearLayout>(R.id.layoutActions).visibility = View.GONE; return VH(v) }
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+            val v = LayoutInflater.from(parent.context).inflate(R.layout.item_own_event, parent, false)
+            v.findViewById<LinearLayout>(R.id.layoutActions).visibility = View.GONE
+            return VH(v)
+        }
         override fun onBindViewHolder(holder: VH, position: Int) {
-            val e = events[position]; holder.tvTitle.text = e.title; holder.tvStatus.text = e.status ?: ""; holder.tvCategory.text = e.category ?: ""
+            val e = events[position]
+            holder.tvTitle.text = e.title
             holder.tvParticipants.text = "${e.participantCount ?: 0}/${e.maxParticipants ?: "∞"} participants"
-            try { val f = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault()); val d = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault()); holder.tvDate.text = d.format(f.parse(e.startDate ?: "")!!) } catch (_: Exception) { holder.tvDate.text = e.startDate ?: "" }
+            try {
+                val f = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+                val d = SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault())
+                holder.tvDate.text = d.format(f.parse(e.startDate ?: "")!!)
+            } catch (_: Exception) { holder.tvDate.text = e.startDate ?: "" }
+            holder.tvStatus.text = e.status ?: ""
+            applyStatusColor(holder.tvStatus, e.status)
+            holder.tvCategory.text = e.category ?: ""
+            applyCategoryColor(holder.tvCategory, e.category)
         }
         override fun getItemCount() = events.size
     }
