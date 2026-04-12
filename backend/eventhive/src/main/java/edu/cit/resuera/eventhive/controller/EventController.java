@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,22 +34,19 @@ public class EventController {
         this.eventService = eventService;
     }
 
+    // Get all events
     @GetMapping
-    public List<EventResponse> getAllEvents(
-            @AuthenticationPrincipal OAuth2User oauthUser,
-            Principal principal) {
-        String email = resolveEmailOrNull(oauthUser, principal);
-        if (email != null) {
-            return eventService.getAllEventsForUser(email);
-        }
+    public List<EventResponse> getAllEvents() {
         return eventService.getAllEvents();
     }
 
+    // Get events by category
     @GetMapping("/category")
     public List<EventResponse> getByCategory(@RequestParam String category) {
         return eventService.getEventsByCategory(category);
     }
 
+    // Get events created by logged-in organizer
     @GetMapping("/my-events")
     public List<EventResponse> getMyEvents(
             @AuthenticationPrincipal OAuth2User oauthUser,
@@ -60,8 +55,15 @@ public class EventController {
         return eventService.getEventsByOrganizer(email);
     }
 
-    @PostMapping
-    public EventResponse createEvent(
+    // ══════════════════════════════════════════════
+    // FIX: Disambiguate the two POST endpoints
+    // The JSON one is for the web frontend
+    // The multipart one is for mobile + web file uploads
+    // ══════════════════════════════════════════════
+
+    // Create event — JSON body (web frontend without image)
+    @PostMapping(consumes = "application/json")
+    public EventResponse createEventJson(
             @RequestBody EventRequest request,
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
@@ -69,8 +71,9 @@ public class EventController {
         return eventService.createEvent(request, email);
     }
 
+    // Create event — multipart (mobile + web with image)
     @PostMapping(consumes = "multipart/form-data")
-    public EventResponse createEvent(
+    public EventResponse createEventMultipart(
             @RequestParam String title,
             @RequestParam String description,
             @RequestParam String startDate,
@@ -95,9 +98,9 @@ public class EventController {
         return eventService.createEvent(request, email, image);
     }
 
-    // Update event details (organizer only)
+    // Update event — multipart (mobile + web)
     @PutMapping(value = "/{id}", consumes = "multipart/form-data")
-    public ResponseEntity<?> updateEvent(
+    public EventResponse updateEvent(
             @PathVariable Long id,
             @RequestParam String title,
             @RequestParam String description,
@@ -108,28 +111,23 @@ public class EventController {
             @RequestParam Integer maxParticipants,
             @RequestParam(required = false) MultipartFile image,
             @AuthenticationPrincipal OAuth2User oauthUser,
-            Principal principal) {
-        try {
-            String email = resolveEmail(oauthUser, principal);
+            Principal principal) throws IOException {
 
-            EventRequest request = new EventRequest();
-            request.setTitle(title);
-            request.setDescription(description);
-            request.setStartDate(LocalDateTime.parse(startDate));
-            request.setEndDate(LocalDateTime.parse(endDate));
-            request.setLocation(location);
-            request.setCategory(category);
-            request.setMaxParticipants(maxParticipants);
+        String email = resolveEmail(oauthUser, principal);
 
-            EventResponse response = eventService.updateEvent(id, request, email, image);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of("message", "File upload failed"));
-        }
+        EventRequest request = new EventRequest();
+        request.setTitle(title);
+        request.setDescription(description);
+        request.setStartDate(LocalDateTime.parse(startDate));
+        request.setEndDate(LocalDateTime.parse(endDate));
+        request.setLocation(location);
+        request.setCategory(category);
+        request.setMaxParticipants(maxParticipants);
+
+        return eventService.updateEvent(id, request, email, image);
     }
 
+    // Update event status
     @PatchMapping("/{id}/status")
     public EventResponse updateStatus(
             @PathVariable Long id,
@@ -137,27 +135,23 @@ public class EventController {
         return eventService.updateEventStatus(id, status);
     }
 
+    // Delete event
     @DeleteMapping("/{id}")
     public void deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
     }
 
-    // ── Registration ──
-
+    // Register for event
     @PostMapping("/{id}/register")
-    public ResponseEntity<?> registerForEvent(
+    public EventResponse registerForEvent(
             @PathVariable Long id,
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
-        try {
-            String email = resolveEmail(oauthUser, principal);
-            EventResponse response = eventService.registerForEvent(id, email);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
-        }
+        String email = resolveEmail(oauthUser, principal);
+        return eventService.registerForEvent(id, email);
     }
 
+    // Get registered events
     @GetMapping("/registered")
     public List<EventResponse> getRegisteredEvents(
             @AuthenticationPrincipal OAuth2User oauthUser,
@@ -170,11 +164,5 @@ public class EventController {
         if (oauthUser != null) return oauthUser.getAttribute("email");
         if (principal != null) return principal.getName();
         throw new RuntimeException("Not authenticated");
-    }
-
-    private String resolveEmailOrNull(OAuth2User oauthUser, Principal principal) {
-        if (oauthUser != null) return oauthUser.getAttribute("email");
-        if (principal != null) return principal.getName();
-        return null;
     }
 }
