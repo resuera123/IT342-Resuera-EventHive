@@ -8,8 +8,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
-
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.http.HttpStatus;
 
 @Configuration
 public class SecurityConfig {
@@ -35,21 +36,18 @@ public class SecurityConfig {
             .securityContext(sc -> sc.securityContextRepository(securityContextRepository()))
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                    .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/google-mobile").permitAll()
                     .requestMatchers("/api/events/registered", "/api/events/my-events").authenticated()
                     .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/events", "/api/events/**").permitAll()
                     .requestMatchers("/uploads/**").permitAll()
                     .anyRequest().authenticated()
             )
+            // Return 401 for /api/** instead of redirecting to OAuth
             .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((request, response, authException) -> {
-                    String requestPath = request.getRequestURI();
-                    if (requestPath.startsWith("/api/")) {
-                        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-                    } else {
-                        response.sendRedirect("http://localhost:5173/login");
-                    }
-                })
+                .defaultAuthenticationEntryPointFor(
+                    new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                    new AntPathRequestMatcher("/api/**")
+                )
             )
             .oauth2Login(oauth -> oauth
                     .defaultSuccessUrl("/login-success", true)

@@ -6,7 +6,6 @@
 
     <application
         android:allowBackup="true"
-        android:usesCleartextTraffic="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
@@ -14,7 +13,23 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Eventhive"
+        android:usesCleartextTraffic="true"
         tools:targetApi="31">
+        <activity
+            android:name=".ui.EditEventActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.NotificationsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.CreateEventActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.EventDetailActivity"
+            android:exported="false" />
         <activity
             android:name=".ui.ProfileActivity"
             android:exported="false" />

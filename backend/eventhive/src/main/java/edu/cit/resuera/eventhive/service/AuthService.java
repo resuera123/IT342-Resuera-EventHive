@@ -15,7 +15,6 @@ import edu.cit.resuera.eventhive.repository.UserRepository;
 public class AuthService {
 
     private final UserRepository userRepository;
-
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public AuthService(UserRepository userRepository) {
@@ -24,7 +23,7 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            return new AuthResponse("Email already registered", null, null, null, null, null, null);
+            return new AuthResponse("Email already registered", null, null, null, null, null, null, null);
         }
 
         User user = new User();
@@ -35,34 +34,59 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
         userRepository.save(user);
 
-        return new AuthResponse("User registered successfully", null, null, null, null, null, null);
+        return new AuthResponse("User registered successfully", null, null, null, null, null, null, null);
     }
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
         if (user == null) {
-            return new AuthResponse("Invalid credentials", null, null, null, null, null, null);
+            return new AuthResponse("Invalid credentials", null, null, null, null, null, null, null);
         }
 
         if (passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            return new AuthResponse("Login successful", user.getId(), user.getFirstname(), user.getLastname(), user.getEmail(), user.getRole(), user.getCreatedAt());
+            return new AuthResponse("Login successful", user.getId(), user.getFirstname(),
+                    user.getLastname(), user.getEmail(), user.getRole(), user.getCreatedAt(),
+                    user.getProfilePicUrl());
         }
 
-        return new AuthResponse("Invalid credentials", null, null, null, null, null, null);
+        return new AuthResponse("Invalid credentials", null, null, null, null, null, null, null);
     }
 
     public AuthResponse getCurrentUser(String email) {
         return userRepository.findByEmail(email)
             .map(user -> new AuthResponse(
-                "User profile retrieved", 
-                user.getId(), 
-                user.getFirstname(), 
-                user.getLastname(), 
+                "User profile retrieved",
+                user.getId(),
+                user.getFirstname(),
+                user.getLastname(),
                 user.getEmail(),
                 user.getRole(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getProfilePicUrl()
             ))
-            .orElse(new AuthResponse("User not found", null, null, null, null, null, null));
+            .orElse(new AuthResponse("User not found", null, null, null, null, null, null, null));
+    }
+
+    public AuthResponse googleMobileLogin(String email, String firstname, String lastname) {
+        if (email == null || email.isEmpty()) {
+            return new AuthResponse("Missing email", null, null, null, null, null, null, null);
+        }
+
+        User user = userRepository.findByEmail(email).orElse(null);
+        if (user == null) {
+            user = new User();
+            user.setEmail(email);
+            user.setFirstname(firstname != null ? firstname : "");
+            user.setLastname(lastname != null ? lastname : "");
+            user.setPasswordHash("GOOGLE_AUTH");
+            user.setRole("participant");
+            user.setCreatedAt(LocalDateTime.now());
+            userRepository.save(user);
+        }
+
+        return new AuthResponse("Login successful", user.getId(), user.getFirstname(),
+                user.getLastname(), user.getEmail(), user.getRole(), user.getCreatedAt(),
+                user.getProfilePicUrl());
     }
 }

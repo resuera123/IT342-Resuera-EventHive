@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="14dp">
+
+        <!-- Title + badges row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/tvOwnTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+
+            <TextView
+                android:id="@+id/tvOwnStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="9sp"
+                android:textColor="#FFFFFF"
+                android:background="#0d6efd"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:layout_marginStart="6dp"/>
+
+            <TextView
+                android:id="@+id/tvOwnCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="9sp"
+                android:textColor="#FFFFFF"
+                android:background="#6c757d"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:layout_marginStart="4dp"/>
+        </LinearLayout>
+
+        <!-- Date -->
+        <TextView
+            android:id="@+id/tvOwnDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:layout_marginBottom="2dp"/>
+
+        <!-- Participants -->
+        <TextView
+            android:id="@+id/tvOwnParticipants"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:textColor="#6B7280"
+            android:layout_marginBottom="10dp"/>
+
+        <!-- Action buttons -->
+        <LinearLayout
+            android:id="@+id/layoutActions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end">
+
+            <Button
+                android:id="@+id/btnOwnEdit"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Edit"
+                android:textSize="11sp"
+                android:textAllCaps="false"
+                android:backgroundTint="#F3F4F6"
+                android:textColor="#374151"
+                android:layout_marginEnd="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btnOwnCancel"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Cancel"
+                android:textSize="11sp"
+                android:textAllCaps="false"
+                android:backgroundTint="#FFF3CD"
+                android:textColor="#856404"
+                android:layout_marginEnd="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btnOwnContinue"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Continue"
+                android:textSize="11sp"
+                android:textAllCaps="false"
+                android:backgroundTint="#D4EDDA"
+                android:textColor="#155724"
+                android:layout_marginEnd="4dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:visibility="gone"/>
+
+            <Button
+                android:id="@+id/btnOwnDelete"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:text="Delete"
+                android:textSize="11sp"
+                android:textAllCaps="false"
+                android:backgroundTint="#F8D7DA"
+                android:textColor="#721C24"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:visibility="gone"/>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

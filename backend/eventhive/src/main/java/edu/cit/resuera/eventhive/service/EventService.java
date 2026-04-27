@@ -108,12 +108,11 @@ public class EventService {
     public EventResponse updateEvent(Long eventId, EventRequest request, String organizerEmail, MultipartFile image) throws IOException {
         Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new RuntimeException("Event not found"));
-
-        // Verify ownership
+ 
         if (!event.getOrganizer().getEmail().equals(organizerEmail)) {
             throw new RuntimeException("Only the organizer can edit this event");
         }
-
+ 
         event.setTitle(request.getTitle());
         event.setDescription(request.getDescription());
         event.setStartDate(request.getStartDate());
@@ -121,7 +120,7 @@ public class EventService {
         event.setLocation(request.getLocation());
         event.setCategory(request.getCategory());
         event.setMaxParticipants(request.getMaxParticipants());
-
+ 
         if (image != null && !image.isEmpty()) {
             String uploadDir = "uploads/events/";
             java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
@@ -129,10 +128,11 @@ public class EventService {
                 java.nio.file.Files.createDirectories(uploadPath);
             }
             String filename = System.currentTimeMillis() + "_" + image.getOriginalFilename();
-            java.nio.file.Files.copy(image.getInputStream(), uploadPath.resolve(filename));
+            java.nio.file.Files.copy(image.getInputStream(), uploadPath.resolve(filename),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             event.setImageUrl("/" + uploadDir + filename);
         }
-
+ 
         return toResponse(eventRepository.save(event), null);
     }
 
