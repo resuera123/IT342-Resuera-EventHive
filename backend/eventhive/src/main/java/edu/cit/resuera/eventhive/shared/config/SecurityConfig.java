@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.config;
+package edu.cit.resuera.eventhive.shared.config;
 
 import java.util.List;
 import org.springframework.context.annotation.Bean;

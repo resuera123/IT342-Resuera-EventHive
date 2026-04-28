@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.controller;
+package edu.cit.resuera.eventhive.auth;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -8,8 +8,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.resuera.eventhive.entity.User;
-import edu.cit.resuera.eventhive.repository.UserRepository;
+import edu.cit.resuera.eventhive.user.User;
+import edu.cit.resuera.eventhive.user.UserRepository;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController

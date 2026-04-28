@@ -1,8 +1,8 @@
-package edu.cit.resuera.eventhive.dto;
+package edu.cit.resuera.eventhive.event.dto;
 
 import java.time.LocalDateTime;
 
-import edu.cit.resuera.eventhive.entity.EventStatus;
+import edu.cit.resuera.eventhive.event.EventStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

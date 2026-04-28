@@ -1,5 +1,4 @@
-package edu.cit.resuera.eventhive.dto;
-
+package edu.cit.resuera.eventhive.auth.dto;
 import lombok.Data;
 
 @Data

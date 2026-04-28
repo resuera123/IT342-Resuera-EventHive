@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.controller;
+package edu.cit.resuera.eventhive.event;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -19,10 +19,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import edu.cit.resuera.eventhive.dto.EventRequest;
-import edu.cit.resuera.eventhive.dto.EventResponse;
-import edu.cit.resuera.eventhive.entity.EventStatus;
-import edu.cit.resuera.eventhive.service.EventService;
+import edu.cit.resuera.eventhive.event.dto.EventRequest;
+import edu.cit.resuera.eventhive.event.dto.EventResponse;
+import edu.cit.resuera.eventhive.event.EventStatus;
+import edu.cit.resuera.eventhive.event.EventService;
 
 @RestController
 @RequestMapping("/api/events")

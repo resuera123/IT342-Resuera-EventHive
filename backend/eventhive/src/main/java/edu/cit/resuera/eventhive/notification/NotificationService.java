@@ -1,16 +1,16 @@
-package edu.cit.resuera.eventhive.service;
+package edu.cit.resuera.eventhive.notification;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import edu.cit.resuera.eventhive.entity.Event;
-import edu.cit.resuera.eventhive.entity.Notification;
-import edu.cit.resuera.eventhive.entity.User;
-import edu.cit.resuera.eventhive.repository.EventRegistrationRepository;
-import edu.cit.resuera.eventhive.repository.NotificationRepository;
-import edu.cit.resuera.eventhive.repository.UserRepository;
+import edu.cit.resuera.eventhive.event.Event;
+import edu.cit.resuera.eventhive.notification.Notification;
+import edu.cit.resuera.eventhive.user.User;
+import edu.cit.resuera.eventhive.event.EventRegistrationRepository;
+import edu.cit.resuera.eventhive.notification.NotificationRepository;
+import edu.cit.resuera.eventhive.user.UserRepository;
 
 @Service
 public class NotificationService {

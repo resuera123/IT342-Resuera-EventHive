@@ -1,11 +1,11 @@
-package edu.cit.resuera.eventhive.repository;
+package edu.cit.resuera.eventhive.notification;
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import edu.cit.resuera.eventhive.entity.Notification;
-import edu.cit.resuera.eventhive.entity.User;
+import edu.cit.resuera.eventhive.notification.Notification;
+import edu.cit.resuera.eventhive.user.User;
 
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 

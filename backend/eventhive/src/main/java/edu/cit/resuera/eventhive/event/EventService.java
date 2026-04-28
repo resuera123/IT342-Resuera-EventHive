@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.service;
+package edu.cit.resuera.eventhive.event;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -8,15 +8,16 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import edu.cit.resuera.eventhive.dto.EventRequest;
-import edu.cit.resuera.eventhive.dto.EventResponse;
-import edu.cit.resuera.eventhive.entity.Event;
-import edu.cit.resuera.eventhive.entity.EventRegistration;
-import edu.cit.resuera.eventhive.entity.EventStatus;
-import edu.cit.resuera.eventhive.entity.User;
-import edu.cit.resuera.eventhive.repository.EventRegistrationRepository;
-import edu.cit.resuera.eventhive.repository.EventRepository;
-import edu.cit.resuera.eventhive.repository.UserRepository;
+import edu.cit.resuera.eventhive.notification.NotificationService;
+import edu.cit.resuera.eventhive.event.dto.EventRequest;
+import edu.cit.resuera.eventhive.event.dto.EventResponse;
+import edu.cit.resuera.eventhive.event.Event;
+import edu.cit.resuera.eventhive.event.EventRegistration;
+import edu.cit.resuera.eventhive.event.EventStatus;
+import edu.cit.resuera.eventhive.user.User;
+import edu.cit.resuera.eventhive.event.EventRegistrationRepository;
+import edu.cit.resuera.eventhive.event.EventRepository;
+import edu.cit.resuera.eventhive.user.UserRepository;
 
 @Service
 public class EventService {

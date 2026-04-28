@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.dto;
+package edu.cit.resuera.eventhive.auth.dto;
 
 import java.time.LocalDateTime;
 

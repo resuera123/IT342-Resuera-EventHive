@@ -1,7 +1,8 @@
-package edu.cit.resuera.eventhive.entity;
+package edu.cit.resuera.eventhive.event;
 
 import java.time.LocalDateTime;
 
+import edu.cit.resuera.eventhive.user.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

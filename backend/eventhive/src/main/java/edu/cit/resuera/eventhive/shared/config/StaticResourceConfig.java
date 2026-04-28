@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.config;
+package edu.cit.resuera.eventhive.shared.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;

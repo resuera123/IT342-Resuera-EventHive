@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.entity;
+package edu.cit.resuera.eventhive.event;
 
 public enum EventStatus {
     UPCOMING,

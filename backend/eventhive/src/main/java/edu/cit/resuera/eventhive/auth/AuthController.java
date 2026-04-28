@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.controller;
+package edu.cit.resuera.eventhive.auth;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.resuera.eventhive.dto.AuthResponse;
-import edu.cit.resuera.eventhive.dto.LoginRequest;
-import edu.cit.resuera.eventhive.dto.RegisterRequest;
-import edu.cit.resuera.eventhive.service.AuthService;
-import edu.cit.resuera.eventhive.entity.User;
-import edu.cit.resuera.eventhive.repository.UserRepository;
+import edu.cit.resuera.eventhive.auth.dto.AuthResponse;
+import edu.cit.resuera.eventhive.auth.dto.LoginRequest;
+import edu.cit.resuera.eventhive.auth.dto.RegisterRequest;
+import edu.cit.resuera.eventhive.auth.AuthService;
+import edu.cit.resuera.eventhive.user.User;
+import edu.cit.resuera.eventhive.user.UserRepository;
 
 import java.security.Principal;
 import java.util.Map;

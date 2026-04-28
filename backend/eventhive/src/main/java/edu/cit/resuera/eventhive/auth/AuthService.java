@@ -1,15 +1,15 @@
-package edu.cit.resuera.eventhive.service;
+package edu.cit.resuera.eventhive.auth;
 
 import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import edu.cit.resuera.eventhive.dto.AuthResponse;
-import edu.cit.resuera.eventhive.dto.LoginRequest;
-import edu.cit.resuera.eventhive.dto.RegisterRequest;
-import edu.cit.resuera.eventhive.entity.User;
-import edu.cit.resuera.eventhive.repository.UserRepository;
+import edu.cit.resuera.eventhive.auth.dto.AuthResponse;
+import edu.cit.resuera.eventhive.auth.dto.LoginRequest;
+import edu.cit.resuera.eventhive.auth.dto.RegisterRequest;
+import edu.cit.resuera.eventhive.user.User;
+import edu.cit.resuera.eventhive.user.UserRepository;
 
 @Service
 public class AuthService {

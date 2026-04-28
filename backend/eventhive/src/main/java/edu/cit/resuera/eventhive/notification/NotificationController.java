@@ -1,4 +1,4 @@
-package edu.cit.resuera.eventhive.controller;
+package edu.cit.resuera.eventhive.notification;
 
 import java.security.Principal;
 import java.time.LocalDateTime;
@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import edu.cit.resuera.eventhive.entity.Notification;
-import edu.cit.resuera.eventhive.service.NotificationService;
+import edu.cit.resuera.eventhive.notification.Notification;
+import edu.cit.resuera.eventhive.notification.NotificationService;
 
 @RestController
 @RequestMapping("/api/notifications")

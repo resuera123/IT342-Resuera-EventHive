@@ -1,12 +1,12 @@
-package edu.cit.resuera.eventhive.repository;
+package edu.cit.resuera.eventhive.event;
 
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import edu.cit.resuera.eventhive.entity.Event;
-import edu.cit.resuera.eventhive.entity.EventRegistration;
-import edu.cit.resuera.eventhive.entity.User;
+import edu.cit.resuera.eventhive.event.Event;
+import edu.cit.resuera.eventhive.event.EventRegistration;
+import edu.cit.resuera.eventhive.user.User;
 
 public interface EventRegistrationRepository extends JpaRepository<EventRegistration, Long> {
 
