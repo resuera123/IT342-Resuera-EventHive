@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import LoginPage from './components/LoginPage'
-import RegisterPage from './components/RegisterPage'
-import DashboardPage from './components/DashboardPage'
-import ProfilePage from './components/ProfilePage'
-import SettingsPage from './components/SettingsPage'
+import LoginPage from './features/auth/LoginPage'
+import RegisterPage from './features/auth/RegisterPage'
+import DashboardPage from './features/events/DashboardPage'
+import ProfilePage from './features/profile/ProfilePage'
+import SettingsPage from './features/settings/SettingsPage'
 
 function App() {
   return (
