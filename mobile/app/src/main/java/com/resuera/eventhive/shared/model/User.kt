@@ -1,4 +1,4 @@
-package com.resuera.eventhive.model
+package com.resuera.eventhive.shared.model
 
 import com.google.gson.annotations.SerializedName
 

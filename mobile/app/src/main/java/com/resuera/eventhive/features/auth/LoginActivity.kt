@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.auth
 
 import android.content.Intent
 import android.os.Bundle
@@ -16,6 +16,7 @@ import com.resuera.eventhive.R
 import com.resuera.eventhive.shared.network.RetrofitClient
 import com.resuera.eventhive.shared.model.AuthResponse
 import com.resuera.eventhive.shared.model.User
+import com.resuera.eventhive.features.dashboard.DashboardActivity
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -38,7 +39,7 @@ class LoginActivity : AppCompatActivity() {
 
             // Send to backend
             val body = mapOf("email" to email, "firstname" to firstName, "lastname" to lastName)
-            RetrofitClient.instance.googleLogin(body).enqueue(object : Callback<AuthResponse> {
+            RetrofitClient.authApi.googleLogin(body).enqueue(object : Callback<AuthResponse> {
                 override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                     if (response.isSuccessful) {
                         val auth = response.body()
@@ -99,7 +100,7 @@ class LoginActivity : AppCompatActivity() {
             loginBtn.isEnabled = false
             val loginRequest = User(null, email, password, null, null)
 
-            RetrofitClient.instance.login(loginRequest).enqueue(object : Callback<AuthResponse> {
+            RetrofitClient.authApi.login(loginRequest).enqueue(object : Callback<AuthResponse> {
                 override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                     loginBtn.isEnabled = true
                     if (response.isSuccessful) {

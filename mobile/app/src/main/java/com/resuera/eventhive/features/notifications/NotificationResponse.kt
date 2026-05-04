@@ -1,4 +1,4 @@
-package com.resuera.eventhive.model
+package com.resuera.eventhive.features.notifications
 
 data class NotificationResponse(
     val id: Long,

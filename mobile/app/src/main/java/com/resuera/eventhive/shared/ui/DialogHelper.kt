@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.shared.ui
 
 import android.app.AlertDialog
 import android.content.Context

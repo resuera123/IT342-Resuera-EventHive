@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.settings
 
 import android.os.Bundle
 import android.view.View
@@ -53,7 +53,7 @@ class SettingsActivity : AppCompatActivity() {
 
         btnSave.setOnClickListener {
             btnSave.isEnabled = false; tvMsg.visibility = View.GONE
-            RetrofitClient.instance.updateProfile(mapOf(
+            RetrofitClient.settingsApi.updateProfile(mapOf(
                 "firstname" to (etFirst.text?.toString()?.trim() ?: ""),
                 "lastname" to (etLast.text?.toString()?.trim() ?: ""),
                 "email" to (etEmail.text?.toString()?.trim() ?: "")
@@ -96,7 +96,7 @@ class SettingsActivity : AppCompatActivity() {
             if (newPw.length < 8) { tvSec.text = "Minimum 8 characters."; tvSec.setTextColor(0xFFDC3545.toInt()); tvSec.visibility = View.VISIBLE; return@setOnClickListener }
 
             btnPw.isEnabled = false
-            RetrofitClient.instance.changePassword(mapOf("currentPassword" to (etCur.text?.toString() ?: ""), "newPassword" to newPw)).enqueue(object : Callback<Map<String, String>> {
+            RetrofitClient.settingsApi.changePassword(mapOf("currentPassword" to (etCur.text?.toString() ?: ""), "newPassword" to newPw)).enqueue(object : Callback<Map<String, String>> {
                 override fun onResponse(call: Call<Map<String, String>>, r: Response<Map<String, String>>) {
                     btnPw.isEnabled = true
                     if (r.isSuccessful) {

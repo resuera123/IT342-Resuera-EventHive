@@ -1,14 +1,13 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.events
 
 import android.os.Bundle
 import android.view.View
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.resuera.eventhive.R
 import com.resuera.eventhive.shared.network.RetrofitClient
-import com.resuera.eventhive.features.events.EventResponse
+import com.resuera.eventhive.shared.ui.DialogHelper
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -61,6 +60,10 @@ class EventDetailActivity : AppCompatActivity() {
         tvStatus.text = status
         tvCategory.text = category
 
+        // Status & category badges (using shared EventColors)
+        tvStatus.setBackgroundColor(EventColors.getStatusColor(status))
+        tvCategory.setBackgroundColor(EventColors.getCategoryColor(category))
+
         // Date/Time
         try {
             val isoFmt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
@@ -95,7 +98,7 @@ class EventDetailActivity : AppCompatActivity() {
 
         btnRegister.setOnClickListener {
             btnRegister.isEnabled = false
-            RetrofitClient.instance.registerForEvent(eventId).enqueue(object : Callback<EventResponse> {
+            RetrofitClient.eventsApi.registerForEvent(eventId).enqueue(object : Callback<EventResponse> {
                 override fun onResponse(call: Call<EventResponse>, response: Response<EventResponse>) {
                     if (response.isSuccessful) {
                         isRegistered = true
@@ -103,7 +106,11 @@ class EventDetailActivity : AppCompatActivity() {
                         tvAttendance.text = "$participantCount / $max registered"
                         progressBar.progress = participantCount
                         updateRegisterButton(btnRegister, isOrganizer, true, participantCount >= max && max > 0, false)
-                        showSuccessDialog(title)
+                        DialogHelper.showSuccess(
+                            this@EventDetailActivity,
+                            "Registration Successful!",
+                            "You have successfully registered for \"$title\". This event has been added to your event list."
+                        )
                     } else {
                         btnRegister.isEnabled = true
                         Toast.makeText(this@EventDetailActivity, "Registration failed", Toast.LENGTH_SHORT).show()
@@ -127,13 +134,5 @@ class EventDetailActivity : AppCompatActivity() {
             isFull -> { btn.text = "Event Full"; btn.isEnabled = false }
             else -> { btn.text = "Register for Event"; btn.isEnabled = true }
         }
-    }
-
-    private fun showSuccessDialog(eventTitle: String) {
-        AlertDialog.Builder(this)
-            .setTitle("Registration Successful!")
-            .setMessage("You have successfully registered for \"$eventTitle\". This event has been added to your event list.")
-            .setPositiveButton("Done") { d, _ -> d.dismiss() }
-            .show()
     }
 }

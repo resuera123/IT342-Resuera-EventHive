@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.profile
 
 import android.app.Activity
 import android.content.Intent
@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.resuera.eventhive.R
 import com.resuera.eventhive.features.events.EditEventActivity
+import com.resuera.eventhive.features.events.EventColors
 import com.resuera.eventhive.shared.network.RetrofitClient
 import com.resuera.eventhive.features.events.EventResponse
 import com.resuera.eventhive.shared.ui.DialogHelper
@@ -121,7 +122,7 @@ class ProfileActivity : AppCompatActivity() {
             val requestBody = file.asRequestBody("image/*".toMediaType())
             val part = MultipartBody.Part.createFormData("image", file.name, requestBody)
 
-            RetrofitClient.instance.uploadProfilePic(part).enqueue(object : Callback<Map<String, String>> {
+            RetrofitClient.profileApi.uploadProfilePic(part).enqueue(object : Callback<Map<String, String>> {
                 override fun onResponse(call: Call<Map<String, String>>, response: Response<Map<String, String>>) {
                     if (response.isSuccessful) {
                         val picUrl = response.body()?.get("profilePicUrl") ?: ""
@@ -141,14 +142,14 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun loadData() {
-        RetrofitClient.instance.getRegisteredEvents().enqueue(object : Callback<List<EventResponse>> {
+        RetrofitClient.eventsApi.getRegisteredEvents().enqueue(object : Callback<List<EventResponse>> {
             override fun onResponse(call: Call<List<EventResponse>>, r: Response<List<EventResponse>>) {
                 registeredEvents = r.body() ?: emptyList(); showCurrentTab()
             }
             override fun onFailure(call: Call<List<EventResponse>>, t: Throwable) {}
         })
         if (isOrganizer) {
-            RetrofitClient.instance.getMyEvents().enqueue(object : Callback<List<EventResponse>> {
+            RetrofitClient.eventsApi.getMyEvents().enqueue(object : Callback<List<EventResponse>> {
                 override fun onResponse(call: Call<List<EventResponse>>, r: Response<List<EventResponse>>) {
                     Log.d("ProfileActivity", "Own events loaded: ${r.code()}, count: ${r.body()?.size ?: 0}")
                     ownEvents = r.body() ?: emptyList()
@@ -176,15 +177,8 @@ class ProfileActivity : AppCompatActivity() {
 
     // ── Status badge color helper ──
     private fun applyStatusColor(tvStatus: TextView, status: String?) {
-        val color = when (status) {
-            "UPCOMING" -> "#0d6efd"
-            "ONGOING" -> "#198754"
-            "CANCELLED" -> "#DC3545"
-            "COMPLETED" -> "#6c757d"
-            else -> "#6c757d"
-        }
         val bg = GradientDrawable().apply {
-            setColor(Color.parseColor(color))
+            setColor(EventColors.getStatusColor(status))
             cornerRadius = 8f
         }
         tvStatus.background = bg
@@ -192,13 +186,8 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun applyCategoryColor(tvCat: TextView, category: String?) {
-        val color = when (category) {
-            "Music" -> "#7c3aed"; "Sports" -> "#ea580c"; "Tech" -> "#0891b2"
-            "Arts" -> "#db2777"; "Food & Drink" -> "#d97706"; "Business" -> "#1e40af"
-            "Health" -> "#059669"; else -> "#6c757d"
-        }
         val bg = GradientDrawable().apply {
-            setColor(Color.parseColor(color))
+            setColor(EventColors.getCategoryColor(category))
             cornerRadius = 8f
         }
         tvCat.background = bg
@@ -211,7 +200,7 @@ class ProfileActivity : AppCompatActivity() {
         DialogHelper.showConfirm(this, DialogIcon.WARNING, "Cancel Event",
             "Are you sure you want to cancel \"${e.title}\"?\n\nParticipants will be notified.",
             "Cancel Event", "#D97706") {
-            RetrofitClient.instance.updateEventStatus(e.id, "CANCELLED").enqueue(object : Callback<EventResponse> {
+            RetrofitClient.eventsApi.updateEventStatus(e.id, "CANCELLED").enqueue(object : Callback<EventResponse> {
                 override fun onResponse(call: Call<EventResponse>, r: Response<EventResponse>) {
                     if (r.isSuccessful) DialogHelper.showSuccess(this@ProfileActivity, "Event Cancelled", "\"${e.title}\" has been cancelled.") { loadData() }
                 }
@@ -224,7 +213,7 @@ class ProfileActivity : AppCompatActivity() {
         DialogHelper.showConfirm(this, DialogIcon.INFO, "Continue Event",
             "Resume \"${e.title}\" and set its status back to Upcoming?",
             "Continue Event", "#198754") {
-            RetrofitClient.instance.updateEventStatus(e.id, "UPCOMING").enqueue(object : Callback<EventResponse> {
+            RetrofitClient.eventsApi.updateEventStatus(e.id, "UPCOMING").enqueue(object : Callback<EventResponse> {
                 override fun onResponse(call: Call<EventResponse>, r: Response<EventResponse>) {
                     if (r.isSuccessful) DialogHelper.showSuccess(this@ProfileActivity, "Event Resumed", "\"${e.title}\" is now Upcoming.") { loadData() }
                 }
@@ -237,7 +226,7 @@ class ProfileActivity : AppCompatActivity() {
         DialogHelper.showConfirm(this, DialogIcon.DANGER, "Delete Event",
             "Permanently delete \"${e.title}\"?\n\nThis cannot be undone.",
             "Delete Permanently", "#DC3545") {
-            RetrofitClient.instance.deleteEvent(e.id).enqueue(object : Callback<Void> {
+            RetrofitClient.eventsApi.deleteEvent(e.id).enqueue(object : Callback<Void> {
                 override fun onResponse(call: Call<Void>, r: Response<Void>) {
                     if (r.isSuccessful) DialogHelper.showSuccess(this@ProfileActivity, "Event Deleted", "\"${e.title}\" has been deleted.") { loadData() }
                 }

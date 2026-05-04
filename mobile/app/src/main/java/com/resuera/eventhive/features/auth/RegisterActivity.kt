@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.auth
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.textfield.TextInputEditText
 import com.resuera.eventhive.R
-import com.resuera.eventhive.features.auth.LoginActivity
 import com.resuera.eventhive.shared.network.RetrofitClient
 import com.resuera.eventhive.shared.model.AuthResponse
 import com.resuera.eventhive.shared.model.User
@@ -67,7 +66,7 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun registerUser(user: User) {
-        RetrofitClient.instance.register(user).enqueue(object : Callback<AuthResponse> {
+        RetrofitClient.authApi.register(user).enqueue(object : Callback<AuthResponse> {
             override fun onResponse(call: Call<AuthResponse>, response: Response<AuthResponse>) {
                 if (response.isSuccessful) {
                     Toast.makeText(this@RegisterActivity, "Account Created!", Toast.LENGTH_SHORT).show()

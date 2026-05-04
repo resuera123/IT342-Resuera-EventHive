@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.events
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
@@ -7,7 +7,6 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.resuera.eventhive.R
 import com.resuera.eventhive.shared.network.RetrofitClient
-import com.resuera.eventhive.features.events.EventResponse
 import com.resuera.eventhive.shared.ui.DialogHelper
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -56,10 +55,10 @@ class EditEventActivity : AppCompatActivity() {
         etLocation.setText(location)
         etMax.setText(if (max > 0) max.toString() else "")
 
-        val spinAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        val spinAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, EventColors.CATEGORIES)
         spinAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCat.adapter = spinAdapter
-        spinnerCat.setSelection(categories.indexOf(category).coerceAtLeast(0))
+        spinnerCat.setSelection(EventColors.CATEGORIES.indexOf(category).coerceAtLeast(0))
 
         btnStart.setOnClickListener { pickDateTime { dt -> startDateTime = dt; btnStart.text = dt.replace("T", " ") } }
         btnEnd.setOnClickListener { pickDateTime { dt -> endDateTime = dt; btnEnd.text = dt.replace("T", " ") } }
@@ -80,7 +79,7 @@ class EditEventActivity : AppCompatActivity() {
             btnSave.isEnabled = false
             val textType = "text/plain".toMediaType()
 
-            RetrofitClient.instance.updateEvent(
+            RetrofitClient.eventsApi.updateEvent(
                 eventId,
                 t.toRequestBody(textType),
                 d.toRequestBody(textType),

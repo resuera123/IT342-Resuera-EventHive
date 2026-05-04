@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.events
 
 import android.app.Activity
 import android.app.DatePickerDialog
@@ -12,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.resuera.eventhive.R
 import com.resuera.eventhive.shared.network.RetrofitClient
-import com.resuera.eventhive.features.events.EventResponse
 import com.resuera.eventhive.shared.ui.DialogHelper
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
@@ -62,7 +61,7 @@ class CreateEventActivity : AppCompatActivity() {
         val btnCancel = findViewById<Button>(R.id.btnCancelCreate)
         val btnPickImage = findViewById<LinearLayout>(R.id.layoutImagePicker)
 
-        val spinAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, categories)
+        val spinAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, EventColors.CATEGORIES)
         spinAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerCategory.adapter = spinAdapter
 
@@ -108,7 +107,7 @@ class CreateEventActivity : AppCompatActivity() {
                 }
             }
 
-            RetrofitClient.instance.createEvent(
+            RetrofitClient.eventsApi.createEvent(
                 title.toRequestBody(textType),
                 desc.toRequestBody(textType),
                 startDateTime.toRequestBody(textType),

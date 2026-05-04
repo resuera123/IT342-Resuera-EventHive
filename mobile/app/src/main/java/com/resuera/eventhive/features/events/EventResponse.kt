@@ -1,4 +1,4 @@
-package com.resuera.eventhive.model
+package com.resuera.eventhive.features.events
 
 data class EventResponse(
     val id: Long,

@@ -1,4 +1,4 @@
-package com.resuera.eventhive.adapter
+package com.resuera.eventhive.features.dashboard
 
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
@@ -11,8 +11,9 @@ import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.resuera.eventhive.R
+import com.resuera.eventhive.features.events.EventColors
+import com.resuera.eventhive.features.events.EventResponse
 import com.resuera.eventhive.shared.network.RetrofitClient
-import com.resuera.eventhive.model.EventResponse
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -55,22 +56,21 @@ class EventAdapter(
         holder.tvLocation.text = event.location ?: ""
         holder.tvParticipants.text = "${event.participantCount ?: 0}/${event.maxParticipants ?: "∞"}"
 
-        // Status badge with proper colors
+        // Status badge — uses shared EventColors
         holder.tvStatus.text = event.status ?: "UPCOMING"
-        val statusColor = when (event.status) {
-            "UPCOMING" -> "#0d6efd"
-            "ONGOING" -> "#198754"
-            "CANCELLED" -> "#DC3545"
-            "COMPLETED" -> "#6c757d"
-            else -> "#6c757d"
+        val statusBg = GradientDrawable().apply {
+            setColor(EventColors.getStatusColor(event.status))
+            cornerRadius = 8f
         }
-        val statusBg = GradientDrawable().apply { setColor(Color.parseColor(statusColor)); cornerRadius = 8f }
         holder.tvStatus.background = statusBg
         holder.tvStatus.setTextColor(Color.WHITE)
 
-        // Category badge
+        // Category badge — uses shared EventColors
         holder.tvCategory.text = event.category ?: ""
-        val catBg = GradientDrawable().apply { setColor(getCategoryColor(event.category)); cornerRadius = 8f }
+        val catBg = GradientDrawable().apply {
+            setColor(EventColors.getCategoryColor(event.category))
+            cornerRadius = 8f
+        }
         holder.tvCategory.background = catBg
         holder.tvCategory.setTextColor(Color.WHITE)
 
@@ -93,18 +93,5 @@ class EventAdapter(
     fun updateList(newEvents: List<EventResponse>) {
         events = newEvents
         notifyDataSetChanged()
-    }
-
-    private fun getCategoryColor(cat: String?): Int {
-        return when (cat) {
-            "Music" -> Color.parseColor("#7c3aed")
-            "Sports" -> Color.parseColor("#ea580c")
-            "Tech" -> Color.parseColor("#0891b2")
-            "Arts" -> Color.parseColor("#db2777")
-            "Food & Drink" -> Color.parseColor("#d97706")
-            "Business" -> Color.parseColor("#1e40af")
-            "Health" -> Color.parseColor("#059669")
-            else -> Color.parseColor("#6c757d")
-        }
     }
 }

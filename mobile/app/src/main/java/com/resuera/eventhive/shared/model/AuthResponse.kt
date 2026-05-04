@@ -1,4 +1,4 @@
-package com.resuera.eventhive.model
+package com.resuera.eventhive.shared.model
 
 data class AuthResponse(
     val status: String?,

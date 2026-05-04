@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.dashboard
 
 import android.content.Context
 import android.content.Intent
@@ -14,12 +14,16 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.resuera.eventhive.R
-import com.resuera.eventhive.adapter.EventAdapter
 import com.resuera.eventhive.features.auth.LoginActivity
 import com.resuera.eventhive.shared.network.RetrofitClient
-import com.resuera.eventhive.model.EventResponse
+import com.resuera.eventhive.features.events.EventResponse
 import com.resuera.eventhive.shared.ui.DialogHelper
 import com.resuera.eventhive.shared.ui.DialogIcon
+import com.resuera.eventhive.features.events.CreateEventActivity
+import com.resuera.eventhive.features.events.EventDetailActivity
+import com.resuera.eventhive.features.notifications.NotificationsActivity
+import com.resuera.eventhive.features.profile.ProfileActivity
+import com.resuera.eventhive.features.settings.SettingsActivity
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -120,7 +124,7 @@ class DashboardActivity : AppCompatActivity() {
     override fun onPause() { super.onPause(); handler.removeCallbacksAndMessages(null) }
 
     private fun loadEvents() {
-        RetrofitClient.instance.getAllEvents().enqueue(object : Callback<List<EventResponse>> {
+        RetrofitClient.eventsApi.getAllEvents().enqueue(object : Callback<List<EventResponse>> {
             override fun onResponse(call: Call<List<EventResponse>>, response: Response<List<EventResponse>>) {
                 if (response.isSuccessful) { allEvents = response.body() ?: emptyList(); filterEvents() }
             }
@@ -145,7 +149,7 @@ class DashboardActivity : AppCompatActivity() {
     }
 
     private fun pollUnreadCount() {
-        RetrofitClient.instance.getUnreadCount().enqueue(object : Callback<Map<String, Int>> {
+        RetrofitClient.notificationsApi.getUnreadCount().enqueue(object : Callback<Map<String, Int>> {
             override fun onResponse(call: Call<Map<String, Int>>, response: Response<Map<String, Int>>) {
                 val count = response.body()?.get("count") ?: 0
                 tvNotifBadge.text = if (count > 9) "9+" else count.toString()

@@ -1,4 +1,4 @@
-package com.resuera.eventhive.ui
+package com.resuera.eventhive.features.notifications
 
 import android.graphics.Color
 import android.graphics.Typeface
@@ -9,7 +9,6 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.resuera.eventhive.R
 import com.resuera.eventhive.shared.network.RetrofitClient
-import com.resuera.eventhive.features.notifications.NotificationResponse
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -46,7 +45,7 @@ class NotificationsActivity : AppCompatActivity() {
         findViewById<ImageButton>(R.id.btnBackFromNotifs).setOnClickListener { finish() }
 
         btnMarkAll.setOnClickListener {
-            RetrofitClient.instance.markAllAsRead().enqueue(object : Callback<Void> {
+            RetrofitClient.notificationsApi.markAllAsRead().enqueue(object : Callback<Void> {
                 override fun onResponse(call: Call<Void>, r: Response<Void>) {
                     allNotifications.forEachIndexed { i, n -> allNotifications[i] = n.copy(read = true) }
                     refreshList()
@@ -67,7 +66,7 @@ class NotificationsActivity : AppCompatActivity() {
     }
 
     private fun loadNotifications() {
-        RetrofitClient.instance.getNotifications().enqueue(object : Callback<List<NotificationResponse>> {
+        RetrofitClient.notificationsApi.getNotifications().enqueue(object : Callback<List<NotificationResponse>> {
             override fun onResponse(call: Call<List<NotificationResponse>>, r: Response<List<NotificationResponse>>) {
                 allNotifications = (r.body() ?: emptyList()).toMutableList()
                 refreshList()
@@ -117,7 +116,7 @@ class NotificationsActivity : AppCompatActivity() {
         listView.setOnItemClickListener { _, _, position, _ ->
             val n = filtered[position]
             if (!n.read) {
-                RetrofitClient.instance.markAsRead(n.id).enqueue(object : Callback<Void> {
+                RetrofitClient.notificationsApi.markAsRead(n.id).enqueue(object : Callback<Void> {
                     override fun onResponse(call: Call<Void>, r: Response<Void>) {
                         val idx = allNotifications.indexOfFirst { it.id == n.id }
                         if (idx >= 0) allNotifications[idx] = n.copy(read = true)
