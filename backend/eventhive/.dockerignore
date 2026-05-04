@@ -1,0 +1,14 @@
+# Keeps Docker build context small and fast
+
+target/
+.idea/
+.vscode/
+*.iml
+.git/
+.gitignore
+.mvn/wrapper/maven-wrapper.jar
+HELP.md
+README.md
+*.log
+.DS_Store
+uploads/
