@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { saveUser } from '../../shared/utils/auth'
 import { authApi } from './authApi'
+import { API_BASE_URL } from '../../shared/api/client'
 
 interface LoginForm {
   email: string
@@ -50,7 +51,7 @@ export default function LoginPage() {
   }
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:8081/oauth2/authorization/google'
+    window.location.href = `${API_BASE_URL}/oauth2/authorization/google`
   }
 
   return (

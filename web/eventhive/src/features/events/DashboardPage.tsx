@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { clearUser, getUser, saveUser } from '../../shared/utils/auth.ts'
+import { getUser, saveUser } from '../../shared/utils/auth.ts'
 import type { UserAuth } from '../../shared/utils/auth.ts'
+import { API_BASE_URL } from '../../shared/api/client.ts'
 import Navbar from '../../shared/components/Navbar.tsx'
 import CreateEventModal from './CreateEventModal.tsx'
 import EventDetailModal from './EventDetailModal.tsx'
+import { eventsApi } from './eventsApi.ts'
+import { authApi } from '../auth/authApi.ts'
 
 const CATEGORIES: string[] = [
   'All Categories',
@@ -67,9 +70,8 @@ export default function DashboardPage() {
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null)
 
   const fetchEvents = useCallback(() => {
-    fetch('http://localhost:8081/api/events', { credentials: 'include' })
-      .then(res => res.json())
-      .then(data => setEvents(data))
+    eventsApi.getAll()
+      .then(data => setEvents(data as EventItem[]))
       .catch(err => console.error("Failed to load events", err))
   }, [])
 
@@ -77,8 +79,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user) return
-    fetch('http://localhost:8081/api/auth/me', { credentials: 'include' })
-      .then(res => res.json())
+    authApi.getCurrentUser()
       .then(data => {
         if (data.id !== null) {
           const u: UserAuth = { id: data.id, firstname: data.firstname, lastname: data.lastname, email: data.email, role: data.role, createdAt: data.createdAt }
@@ -149,7 +150,7 @@ export default function DashboardPage() {
                 <div className="card shadow-sm h-100" style={{ cursor: 'pointer' }} onClick={() => setSelectedEvent(event)}>
                   <div className="row g-0">
                     <div className="col-4">
-                      <img src={event.imageUrl ? `http://localhost:8081${event.imageUrl}` : "/placeholder.jpg"} className="img-fluid rounded-start h-100" style={{ objectFit: "cover" }} />
+                      <img src={event.imageUrl ? `${API_BASE_URL}${event.imageUrl}` : "/placeholder.jpg"} className="img-fluid rounded-start h-100" style={{ objectFit: "cover" }} />
                     </div>
                     <div className="col-8">
                       <div className="card-body p-2">

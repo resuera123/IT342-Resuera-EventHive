@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
+import { API_BASE_URL } from '../../shared/api/client'
+import { eventsApi } from './eventsApi'
 
 const CATEGORIES = ['Music', 'Sports', 'Tech', 'Arts', 'Food & Drink', 'Business', 'Health']
 
@@ -47,7 +49,7 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
         category: event.category,
         maxParticipants: String(event.maxParticipants ?? ''),
       })
-      setImagePreview(event.imageUrl ? `http://localhost:8081${event.imageUrl}` : null)
+      setImagePreview(event.imageUrl ? `${API_BASE_URL}${event.imageUrl}` : null)
       setImage(null)
       setError('')
     }
@@ -80,31 +82,20 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
     setLoading(true)
 
     try {
-      const formData = new FormData()
-      formData.append('title', form.title)
-      formData.append('description', form.description)
-      formData.append('startDate', form.startDate)
-      formData.append('endDate', form.endDate)
-      formData.append('location', form.location)
-      formData.append('category', form.category)
-      formData.append('maxParticipants', form.maxParticipants)
-      if (image) formData.append('image', image)
+      await eventsApi.update(event.id, {
+        title: form.title,
+        description: form.description,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        location: form.location,
+        category: form.category,
+        maxParticipants: Number(form.maxParticipants),
+      }, image ?? undefined)
 
-      const res = await fetch(`http://localhost:8081/api/events/${event.id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        body: formData,
-      })
-
-      if (res.ok) {
-        onSuccess()
-        onClose()
-      } else {
-        const data = await res.json()
-        setError(data.message || 'Failed to update event')
-      }
-    } catch {
-      setError('Unable to connect to server.')
+      onSuccess()
+      onClose()
+    } catch (err: any) {
+      setError(err.message || 'Unable to connect to server.')
     } finally {
       setLoading(false)
     }

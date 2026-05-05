@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUser, clearUser } from '../../shared/utils/auth.ts'
+import { getUser } from '../../shared/utils/auth.ts'
+import { API_BASE_URL } from '../../shared/api/client.ts'
 import Navbar from '../../shared/components/Navbar.tsx'
 import EditEventModal from '../events/EditEventModal.tsx'
+import { eventsApi } from '../events/eventsApi.ts'
 
 interface EventItem {
   id: number
@@ -70,16 +72,14 @@ export default function ProfilePage() {
   const fetchData = () => {
     const fetches: Promise<void>[] = []
     fetches.push(
-      fetch('http://localhost:8081/api/events/registered', { credentials: 'include' })
-        .then(res => res.json())
-        .then(data => setRegisteredEvents(Array.isArray(data) ? data : []))
+      eventsApi.getRegistered()
+        .then(data => setRegisteredEvents(Array.isArray(data) ? data as EventItem[] : []))
         .catch(err => console.error('Failed to load registered events', err))
     )
     if (isOrganizer) {
       fetches.push(
-        fetch('http://localhost:8081/api/events/my-events', { credentials: 'include' })
-          .then(res => res.json())
-          .then(data => setOwnEvents(Array.isArray(data) ? data : []))
+        eventsApi.getMyEvents()
+          .then(data => setOwnEvents(Array.isArray(data) ? data as EventItem[] : []))
           .catch(err => console.error('Failed to load own events', err))
       )
     }
@@ -93,11 +93,11 @@ export default function ProfilePage() {
     setActionLoading(true)
     try {
       if (modal.type === 'cancel') {
-        await fetch(`http://localhost:8081/api/events/${modal.event.id}/status?status=CANCELLED`, { method: 'PATCH', credentials: 'include' })
+        await eventsApi.updateStatus(modal.event.id, 'CANCELLED')
       } else if (modal.type === 'continue') {
-        await fetch(`http://localhost:8081/api/events/${modal.event.id}/status?status=UPCOMING`, { method: 'PATCH', credentials: 'include' })
+        await eventsApi.updateStatus(modal.event.id, 'UPCOMING')
       } else if (modal.type === 'delete') {
-        await fetch(`http://localhost:8081/api/events/${modal.event.id}`, { method: 'DELETE', credentials: 'include' })
+        await eventsApi.delete(modal.event.id)
       }
       await fetchData()
     } catch {
@@ -245,7 +245,7 @@ export default function ProfilePage() {
                   return (
                     <div key={event.id} className="card shadow-sm border-0 p-0 overflow-hidden">
                       <div className="d-flex">
-                        <img src={event.imageUrl ? `http://localhost:8081${event.imageUrl}` : '/placeholder.jpg'} alt={event.title} className="object-fit-cover flex-shrink-0" style={{ width: 140, height: 120 }} />
+                        <img src={event.imageUrl ? `${API_BASE_URL}${event.imageUrl}` : '/placeholder.jpg'} alt={event.title} className="object-fit-cover flex-shrink-0" style={{ width: 140, height: 120 }} />
                         <div className="p-3 flex-grow-1 position-relative">
                           <div className="position-absolute top-0 end-0 m-2 d-flex gap-1">
                             <span className={`badge ${statusBadgeColor(event.status)}`} style={{ fontSize: '0.65rem' }}>{event.status}</span>

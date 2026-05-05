@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { authApi } from './authApi'
 
 interface RegisterForm {
   firstname: string
@@ -44,18 +45,12 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      const res = await fetch('http://localhost:8081/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          firstname: form.firstname,
-          lastname: form.lastname,
-          email: form.email,
-          password: form.password,
-        }),
+      const data = await authApi.register({
+        firstname: form.firstname,
+        lastname: form.lastname,
+        email: form.email,
+        password: form.password,
       })
-
-      const data = await res.json()
 
       if (data.status === 'User registered successfully') {
         navigate('/login')

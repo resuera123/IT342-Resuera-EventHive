@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import type { UserAuth } from '../../shared/utils/auth'
+import { API_BASE_URL } from '../../shared/api/client'
+import { eventsApi } from './eventsApi'
 
 type EventItem = {
   id: number
@@ -79,18 +81,10 @@ export default function EventDetailModal({ event, user, onClose, onRegistered }:
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`http://localhost:8081/api/events/${event.id}/register`, {
-        method: 'POST',
-        credentials: 'include',
-      })
-      if (res.ok) {
-        setShowSuccess(true)
-      } else {
-        const data = await res.json()
-        setError(data.message || 'Registration failed')
-      }
-    } catch {
-      setError('Unable to connect to server.')
+      await eventsApi.register(event.id)
+      setShowSuccess(true)
+    } catch (err: any) {
+      setError(err.message || 'Unable to connect to server.')
     } finally {
       setLoading(false)
     }
@@ -154,7 +148,7 @@ export default function EventDetailModal({ event, user, onClose, onRegistered }:
             {/* Header image */}
             {event.imageUrl && (
               <img
-                src={`http://localhost:8081${event.imageUrl}`}
+                src={`${API_BASE_URL}${event.imageUrl}`}
                 alt={event.title}
                 className="w-100"
                 style={{ maxHeight: 220, objectFit: 'cover' }}

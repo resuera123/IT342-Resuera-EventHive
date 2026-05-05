@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
+import { eventsApi } from './eventsApi'
 
 const CATEGORIES = [
   'Music',
@@ -67,31 +68,20 @@ export default function CreateEventModal({ show, onClose, onSuccess }: CreateEve
     setLoading(true)
 
     try {
-      const formData = new FormData()
-      formData.append('title', form.title)
-      formData.append('description', form.description)
-      formData.append('startDate', form.startDate)
-      formData.append('endDate', form.endDate)
-      formData.append('location', form.location)
-      formData.append('category', form.category)
-      formData.append('maxParticipants', form.maxParticipants)
-      if (image) formData.append('image', image)
+      await eventsApi.createWithImage({
+        title: form.title,
+        description: form.description,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        location: form.location,
+        category: form.category,
+        maxParticipants: Number(form.maxParticipants),
+      }, image ?? undefined)
 
-      const res = await fetch('http://localhost:8081/api/events', {
-        method: 'POST',
-        credentials: 'include',
-        body: formData,
-      })
-
-      if (res.ok) {
-        handleClose()
-        onSuccess()
-      } else {
-        const data = await res.json()
-        setError(data.message || 'Failed to create event')
-      }
-    } catch (_err) {
-      setError('Unable to connect to server. Please try again.')
+      handleClose()
+      onSuccess()
+    } catch (err: any) {
+      setError(err.message || 'Unable to connect to server. Please try again.')
     } finally {
       setLoading(false)
     }

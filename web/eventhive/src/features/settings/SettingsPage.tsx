@@ -1,10 +1,9 @@
 import { useState, type ChangeEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { getUser, saveUser, clearUser } from '../../shared/utils/auth.ts'
+import { getUser, saveUser } from '../../shared/utils/auth.ts'
 import Navbar from '../../shared/components/Navbar.tsx'
+import { settingsApi } from './settingsApi.ts'
 
 export default function SettingsPage() {
-  const navigate = useNavigate()
   const user = getUser()
 
   const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'security'>('profile')
@@ -37,22 +36,23 @@ export default function SettingsPage() {
     setProfileLoading(true)
 
     try {
-      const res = await fetch('http://localhost:8081/api/users/profile', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstname: firstName, lastname: lastName, email }),
+      const data = await settingsApi.updateProfile({
+        firstname: firstName,
+        lastname: lastName,
+        email,
       })
-      const data = await res.json()
 
-      if (res.ok) {
-        saveUser({ id: data.id, firstname: data.firstname, lastname: data.lastname, email: data.email, role: data.role, createdAt: data.createdAt })
-        setProfileMsg({ type: 'success', text: 'Profile updated successfully.' })
-      } else {
-        setProfileMsg({ type: 'error', text: data.message || 'Failed to update profile.' })
-      }
-    } catch {
-      setProfileMsg({ type: 'error', text: 'Unable to connect to server.' })
+      saveUser({
+        id: data.id,
+        firstname: data.firstname,
+        lastname: data.lastname,
+        email: data.email,
+        role: data.role,
+        createdAt: data.createdAt,
+      })
+      setProfileMsg({ type: 'success', text: 'Profile updated successfully.' })
+    } catch (err: any) {
+      setProfileMsg({ type: 'error', text: err.message || 'Unable to connect to server.' })
     } finally {
       setProfileLoading(false)
     }
@@ -73,22 +73,11 @@ export default function SettingsPage() {
 
     setSecurityLoading(true)
     try {
-      const res = await fetch('http://localhost:8081/api/users/password', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      })
-      const data = await res.json()
-
-      if (res.ok) {
-        setSecurityMsg({ type: 'success', text: 'Password changed successfully.' })
-        setCurrentPassword(''); setNewPassword(''); setConfirmPassword('')
-      } else {
-        setSecurityMsg({ type: 'error', text: data.message || 'Failed to change password.' })
-      }
-    } catch {
-      setSecurityMsg({ type: 'error', text: 'Unable to connect to server.' })
+      await settingsApi.changePassword({ currentPassword, newPassword })
+      setSecurityMsg({ type: 'success', text: 'Password changed successfully.' })
+      setCurrentPassword(''); setNewPassword(''); setConfirmPassword('')
+    } catch (err: any) {
+      setSecurityMsg({ type: 'error', text: err.message || 'Unable to connect to server.' })
     } finally {
       setSecurityLoading(false)
     }

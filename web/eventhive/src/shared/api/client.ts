@@ -1,5 +1,6 @@
 // Centralized API configuration
-export const API_BASE_URL = 'http://localhost:8081'
+// Falls back to localhost if no env var is set
+export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081'
 
 interface FetchOptions extends RequestInit {
   body?: any
