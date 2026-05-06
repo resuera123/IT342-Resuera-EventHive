@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // Use 10.0.2.2 for Android emulator, or your LAN IP for a physical device
-    private const val BASE_URL = "http://192.168.254.100:8081/"
+    const val BASE_URL = "https://eventhive-backend-gwzf.onrender.com/"
 
     fun getBaseUrl(): String = BASE_URL.trimEnd('/')
 
