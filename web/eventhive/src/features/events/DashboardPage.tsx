@@ -3,7 +3,7 @@ import type { ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUser, saveUser } from '../../shared/utils/auth.ts'
 import type { UserAuth } from '../../shared/utils/auth.ts'
-import { API_BASE_URL } from '../../shared/api/client.ts'
+import { resolveImageUrl } from '../../shared/utils/images'
 import Navbar from '../../shared/components/Navbar.tsx'
 import CreateEventModal from './CreateEventModal.tsx'
 import EventDetailModal from './EventDetailModal.tsx'
@@ -150,7 +150,7 @@ export default function DashboardPage() {
                 <div className="card shadow-sm h-100" style={{ cursor: 'pointer' }} onClick={() => setSelectedEvent(event)}>
                   <div className="row g-0">
                     <div className="col-4">
-                      <img src={event.imageUrl ? `${API_BASE_URL}${event.imageUrl}` : "/placeholder.jpg"} className="img-fluid rounded-start h-100" style={{ objectFit: "cover" }} />
+                      <img src={resolveImageUrl(event.imageUrl)} className="img-fluid rounded-start h-100" style={{ objectFit: "cover" }} />
                     </div>
                     <div className="col-8">
                       <div className="card-body p-2">

@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import type { ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUser } from '../../shared/utils/auth.ts'
-import { API_BASE_URL } from '../../shared/api/client.ts'
+import { getUser, saveUser } from '../../shared/utils/auth.ts'
+import type { UserAuth } from '../../shared/utils/auth.ts'
+import { resolveImageUrl } from '../../shared/utils/images'
 import Navbar from '../../shared/components/Navbar.tsx'
 import EditEventModal from '../events/EditEventModal.tsx'
 import { eventsApi } from '../events/eventsApi.ts'
+import { settingsApi } from '../settings/settingsApi.ts'
 
 interface EventItem {
   id: number
@@ -56,9 +59,11 @@ type ModalAction = {
   event: EventItem
 } | null
 
+type SuccessModal = { title: string; message: string } | null
+
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const user = getUser()
+  const [user, setUser] = useState<UserAuth | null>(getUser())
   const isOrganizer = user?.role?.toLowerCase() === 'organizer'
 
   const [activeTab, setActiveTab] = useState<TabKey>(isOrganizer ? 'own' : 'my')
@@ -68,6 +73,12 @@ export default function ProfilePage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [modal, setModal] = useState<ModalAction>(null)
   const [editingEvent, setEditingEvent] = useState<EventItem | null>(null)
+
+  // ── Profile picture state ──
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [picUploading, setPicUploading] = useState(false)
+  const [successModal, setSuccessModal] = useState<SuccessModal>(null)
+  const [picError, setPicError] = useState<string | null>(null)
 
   const fetchData = () => {
     const fetches: Promise<void>[] = []
@@ -108,9 +119,58 @@ export default function ProfilePage() {
     }
   }
 
+  // ── Profile picture upload handlers ──
+
+  const handleAvatarClick = () => {
+    if (picUploading) return
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // reset input so same file can be re-selected later
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setPicError('Please select an image file.')
+      setTimeout(() => setPicError(null), 4000)
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPicError('Image must be smaller than 5 MB.')
+      setTimeout(() => setPicError(null), 4000)
+      return
+    }
+
+    setPicUploading(true)
+    setPicError(null)
+    try {
+      const result = await settingsApi.uploadProfilePic(file)
+      const newUrl = result.profilePicUrl
+
+      // Persist updated user to localStorage so other pages see the new pic
+      if (user) {
+        const updated: UserAuth = { ...user, profilePicUrl: newUrl }
+        saveUser(updated)
+        setUser(updated)
+      }
+
+      setSuccessModal({
+        title: 'Photo Updated',
+        message: 'Your profile picture has been updated successfully.',
+      })
+    } catch (err: any) {
+      setPicError(err?.message || 'Upload failed. Please try again.')
+      setTimeout(() => setPicError(null), 5000)
+    } finally {
+      setPicUploading(false)
+    }
+  }
+
   const fullName = user ? `${user.firstname} ${user.lastname}` : 'Guest'
   const email = user?.email ?? ''
   const initials = user ? `${user.firstname.charAt(0)}${user.lastname.charAt(0)}`.toUpperCase() : '?'
+  const avatarUrl = user?.profilePicUrl ? resolveImageUrl(user.profilePicUrl) : null
 
   const now = new Date()
   const myEvents = registeredEvents.filter(e => new Date(e.endDate) >= now && e.status !== 'CANCELLED' && e.status !== 'COMPLETED')
@@ -163,12 +223,88 @@ export default function ProfilePage() {
             <div className="card shadow-sm border-0 overflow-hidden">
               <div style={{ height: 72, background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' }} />
               <div className="card-body text-center" style={{ marginTop: -36 }}>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleFileChange}
+                />
+
+                {/* Clickable avatar */}
                 <div
-                  className="mx-auto d-flex align-items-center justify-content-center rounded-circle fw-bold text-white shadow"
-                  style={{ width: 64, height: 64, fontSize: 22, background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: '3px solid #fff' }}
+                  className="position-relative mx-auto"
+                  style={{ width: 64, height: 64, cursor: picUploading ? 'wait' : 'pointer' }}
+                  onClick={handleAvatarClick}
+                  title="Click to change profile picture"
                 >
-                  {initials}
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Profile"
+                      className="rounded-circle shadow"
+                      style={{
+                        width: 64,
+                        height: 64,
+                        objectFit: 'cover',
+                        border: '3px solid #fff',
+                      }}
+                    />
+                  ) : (
+                    <div
+                      className="d-flex align-items-center justify-content-center rounded-circle fw-bold text-white shadow"
+                      style={{
+                        width: 64,
+                        height: 64,
+                        fontSize: 22,
+                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                        border: '3px solid #fff',
+                      }}
+                    >
+                      {initials}
+                    </div>
+                  )}
+
+                  {/* Camera overlay */}
+                  <div
+                    className="position-absolute d-flex align-items-center justify-content-center rounded-circle shadow"
+                    style={{
+                      bottom: 0,
+                      right: 0,
+                      width: 22,
+                      height: 22,
+                      backgroundColor: '#1e293b',
+                      border: '2px solid #fff',
+                    }}
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                      <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                  </div>
+
+                  {/* Loading overlay */}
+                  {picUploading && (
+                    <div
+                      className="position-absolute top-0 start-0 d-flex align-items-center justify-content-center rounded-circle"
+                      style={{
+                        width: 64,
+                        height: 64,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                      }}
+                    >
+                      <div className="spinner-border spinner-border-sm text-white" role="status" />
+                    </div>
+                  )}
                 </div>
+
+                {picError && (
+                  <div className="alert alert-danger py-1 px-2 small mt-2 mb-0" style={{ fontSize: 11 }}>
+                    {picError}
+                  </div>
+                )}
 
                 <h6 className="fw-bold mt-2 mb-0">{fullName}</h6>
                 <p className="text-muted mb-2" style={{ fontSize: 12 }}>Member since {createdAt}</p>
@@ -245,7 +381,7 @@ export default function ProfilePage() {
                   return (
                     <div key={event.id} className="card shadow-sm border-0 p-0 overflow-hidden">
                       <div className="d-flex">
-                        <img src={event.imageUrl ? `${API_BASE_URL}${event.imageUrl}` : '/placeholder.jpg'} alt={event.title} className="object-fit-cover flex-shrink-0" style={{ width: 140, height: 120 }} />
+                        <img src={event.imageUrl ? resolveImageUrl(event.imageUrl) : '/placeholder.jpg'} alt={event.title} className="object-fit-cover flex-shrink-0" style={{ width: 140, height: 120 }} />
                         <div className="p-3 flex-grow-1 position-relative">
                           <div className="position-absolute top-0 end-0 m-2 d-flex gap-1">
                             <span className={`badge ${statusBadgeColor(event.status)}`} style={{ fontSize: '0.65rem' }}>{event.status}</span>
@@ -323,6 +459,29 @@ export default function ProfilePage() {
           </>
         )
       })()}
+
+      {/* ── Profile Pic Success Modal ── */}
+      {successModal && (
+        <>
+          <div className="modal-backdrop fade show" style={{ zIndex: 1040 }} onClick={() => setSuccessModal(null)} />
+          <div className="modal fade show d-block" style={{ zIndex: 1050 }} role="dialog">
+            <div className="modal-dialog modal-dialog-centered modal-sm">
+              <div className="modal-content border-0 shadow text-center p-4">
+                <div className="mx-auto mb-3" style={{ width: 64, height: 64, borderRadius: '50%', background: '#d4edda', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#198754" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <h5 className="fw-bold mb-2">{successModal.title}</h5>
+                <p className="text-muted small mb-3">{successModal.message}</p>
+                <button className="btn btn-success btn-sm w-100" onClick={() => setSuccessModal(null)}>
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── Edit Event Modal ── */}
       <EditEventModal

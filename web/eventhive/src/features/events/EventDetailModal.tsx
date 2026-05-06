@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { UserAuth } from '../../shared/utils/auth'
-import { API_BASE_URL } from '../../shared/api/client'
+import { resolveImageUrl } from '../../shared/utils/images'
 import { eventsApi } from './eventsApi'
 
 type EventItem = {
@@ -148,7 +148,7 @@ export default function EventDetailModal({ event, user, onClose, onRegistered }:
             {/* Header image */}
             {event.imageUrl && (
               <img
-                src={`${API_BASE_URL}${event.imageUrl}`}
+                src={resolveImageUrl(event.imageUrl)}
                 alt={event.title}
                 className="w-100"
                 style={{ maxHeight: 220, objectFit: 'cover' }}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
-import { API_BASE_URL } from '../../shared/api/client'
+import { resolveImageUrl } from '../../shared/utils/images'
 import { eventsApi } from './eventsApi'
 
 const CATEGORIES = ['Music', 'Sports', 'Tech', 'Arts', 'Food & Drink', 'Business', 'Health']
@@ -49,7 +49,7 @@ export default function EditEventModal({ event, onClose, onSuccess }: EditEventM
         category: event.category,
         maxParticipants: String(event.maxParticipants ?? ''),
       })
-      setImagePreview(event.imageUrl ? `${API_BASE_URL}${event.imageUrl}` : null)
+      setImagePreview(event.imageUrl ? resolveImageUrl(event.imageUrl) : null)
       setImage(null)
       setError('')
     }
