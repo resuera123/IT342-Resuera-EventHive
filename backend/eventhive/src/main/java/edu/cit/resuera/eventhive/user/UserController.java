@@ -16,18 +16,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import edu.cit.resuera.eventhive.user.User;
-import edu.cit.resuera.eventhive.user.UserRepository;
+import edu.cit.resuera.eventhive.shared.storage.SupabaseStorageService;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserRepository userRepository;
+    private final SupabaseStorageService storageService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, SupabaseStorageService storageService) {
         this.userRepository = userRepository;
+        this.storageService = storageService;
     }
 
     // Update profile (firstname, lastname, email)
@@ -114,31 +115,27 @@ public class UserController {
             @RequestParam("image") MultipartFile image,
             @AuthenticationPrincipal OAuth2User oauthUser,
             Principal principal) {
- 
+
         String email = resolveEmail(oauthUser, principal);
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
- 
+
         try {
-            String uploadDir = "uploads/profiles/";
-            java.nio.file.Path uploadPath = java.nio.file.Paths.get(uploadDir);
-            if (!java.nio.file.Files.exists(uploadPath)) {
-                java.nio.file.Files.createDirectories(uploadPath);
-            }
-            String filename = user.getId() + "_" + System.currentTimeMillis() + "_" + image.getOriginalFilename();
-            java.nio.file.Files.copy(image.getInputStream(), uploadPath.resolve(filename),
-                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-            String url = "/" + uploadDir + filename;
- 
+            // Delete the previous image from Supabase, then upload the new one.
+            // Best-effort delete — don't block the upload if cleanup fails.
+            String previousUrl = user.getProfilePicUrl();
+            String url = storageService.uploadProfilePic(image, user.getId());
+            storageService.deleteByPublicUrl(previousUrl);
+
             user.setProfilePicUrl(url);
             userRepository.save(user);
- 
+
             return ResponseEntity.ok(Map.of("profilePicUrl", url));
         } catch (java.io.IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of("message", "Upload failed"));
+            return ResponseEntity.internalServerError().body(Map.of("message", "Upload failed: " + e.getMessage()));
         }
     }
- 
+
     // Get profile pic URL
     @GetMapping("/profile-pic")
     public ResponseEntity<?> getProfilePic(
