@@ -34,7 +34,7 @@ public class SecurityConfig {
             }))
             // ... everything else identical ...
             .oauth2Login(oauth -> oauth
-                    .defaultSuccessUrl(frontendUrl + "/login-success", true)  // ← changed
+                    .defaultSuccessUrl("/login-success", true)  // ← changed
                     .failureUrl(frontendUrl + "/login?error=oauth")           // ← added
             );
 

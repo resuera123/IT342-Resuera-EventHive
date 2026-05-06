@@ -3,6 +3,7 @@ package edu.cit.resuera.eventhive.auth;
 import java.io.IOException;
 import java.time.LocalDateTime;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,9 @@ import jakarta.servlet.http.HttpServletResponse;
 public class OAuthController {
 
     private final UserRepository userRepository;
+
+    @Value("${app.frontend-url:http://localhost:5173}")
+    private String frontendUrl;
 
     public OAuthController(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -51,7 +55,7 @@ public class OAuthController {
             userRepository.save(user);
         }
 
-        response.sendRedirect("http://localhost:5173/dashboard");
+        response.sendRedirect(frontendUrl + "/dashboard");
     }
 }
  
