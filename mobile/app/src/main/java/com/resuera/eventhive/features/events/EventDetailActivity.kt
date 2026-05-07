@@ -8,6 +8,7 @@ import com.bumptech.glide.Glide
 import com.resuera.eventhive.R
 import com.resuera.eventhive.shared.network.RetrofitClient
 import com.resuera.eventhive.shared.ui.DialogHelper
+import com.resuera.eventhive.shared.util.ImageUrls
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -88,9 +89,11 @@ class EventDetailActivity : AppCompatActivity() {
             progressBar.visibility = View.GONE
         }
 
-        // Image
-        if (!imageUrl.isNullOrEmpty()) {
-            Glide.with(this).load("${RetrofitClient.getBaseUrl()}$imageUrl").centerCrop().into(ivImage)
+        // Image — resolved via ImageUrls helper to handle both legacy
+        // /uploads/... paths and full Supabase URLs.
+        val resolved = ImageUrls.resolve(imageUrl)
+        if (resolved != null) {
+            Glide.with(this).load(resolved).centerCrop().into(ivImage)
         }
 
         // Register button

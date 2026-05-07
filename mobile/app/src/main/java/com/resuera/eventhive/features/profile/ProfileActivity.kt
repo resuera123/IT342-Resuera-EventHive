@@ -23,6 +23,7 @@ import com.resuera.eventhive.shared.network.RetrofitClient
 import com.resuera.eventhive.features.events.EventResponse
 import com.resuera.eventhive.shared.ui.DialogHelper
 import com.resuera.eventhive.shared.ui.DialogIcon
+import com.resuera.eventhive.shared.util.ImageUrls
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -108,8 +109,11 @@ class ProfileActivity : AppCompatActivity() {
     override fun onResume() { super.onResume(); loadData() }
 
     private fun loadProfilePic(url: String?) {
-        if (!url.isNullOrEmpty()) {
-            Glide.with(this).load("${RetrofitClient.getBaseUrl()}$url").circleCrop().into(ivProfilePic)
+        // Resolve via ImageUrls helper to handle both legacy /uploads/...
+        // paths and full Supabase URLs.
+        val resolved = ImageUrls.resolve(url)
+        if (resolved != null) {
+            Glide.with(this).load(resolved).circleCrop().into(ivProfilePic)
             tvInitials.visibility = View.GONE; ivProfilePic.visibility = View.VISIBLE
         }
     }

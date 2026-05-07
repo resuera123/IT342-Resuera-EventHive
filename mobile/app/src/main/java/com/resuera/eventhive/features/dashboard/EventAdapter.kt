@@ -13,7 +13,7 @@ import com.bumptech.glide.Glide
 import com.resuera.eventhive.R
 import com.resuera.eventhive.features.events.EventColors
 import com.resuera.eventhive.features.events.EventResponse
-import com.resuera.eventhive.shared.network.RetrofitClient
+import com.resuera.eventhive.shared.util.ImageUrls
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -74,10 +74,12 @@ class EventAdapter(
         holder.tvCategory.background = catBg
         holder.tvCategory.setTextColor(Color.WHITE)
 
-        // Image
-        if (!event.imageUrl.isNullOrEmpty()) {
+        // Image — resolved through ImageUrls helper to handle both
+        // legacy /uploads/... paths and full Supabase URLs.
+        val resolved = ImageUrls.resolve(event.imageUrl)
+        if (resolved != null) {
             Glide.with(holder.ivImage.context)
-                .load("${RetrofitClient.getBaseUrl()}${event.imageUrl}")
+                .load(resolved)
                 .centerCrop()
                 .into(holder.ivImage)
         } else {
