@@ -82,7 +82,7 @@ export default function DashboardPage() {
     authApi.getCurrentUser()
       .then(data => {
         if (data.id !== null) {
-          const u: UserAuth = { id: data.id, firstname: data.firstname, lastname: data.lastname, email: data.email, role: data.role, createdAt: data.createdAt }
+          const u: UserAuth = { id: data.id, firstname: data.firstname, lastname: data.lastname, email: data.email, role: data.role, createdAt: data.createdAt, profilePicUrl: data.profilePicUrl}
           saveUser(u); setUser(u)
         } else { navigate('/login') }
       })
